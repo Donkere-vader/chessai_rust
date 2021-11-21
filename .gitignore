@@ -3,3 +3,6 @@
 # personal
 /dog.yaml
 /dog
+
+# IDE
+.vscode

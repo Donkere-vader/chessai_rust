@@ -1,6 +1,6 @@
 
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PieceType {
     Pawn,
     Knight,
@@ -17,6 +17,7 @@ pub enum Color {
     Black,
 }
 
+#[derive(Copy, Clone)]
 pub struct Move {
     pub from: [i8; 2],
     pub to: [i8; 2],

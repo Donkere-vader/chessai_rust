@@ -3,6 +3,7 @@ use crate::piece::{ Piece };
 use crate::consts::{ Color, Move, PieceType };
 
 
+#[derive(Copy, Clone)]
 pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
@@ -83,14 +84,17 @@ impl Game {
         format!("{} {} KQkq - 0 1", board_string, on_turn)
     }
     
-    pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>) {
+    pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>, seen_from: Color) {
         let highlight = match highlight {
             Some(h) => h,
             None => Vec::new(),
         };
 
-        for (y, rank) in (&self.board).iter().enumerate() {
-            for (x, piece) in rank.iter().enumerate() {
+        for mut y in 0..8 {
+            if seen_from == Color::White { y = 7 - y }
+            for mut x in 0..8 {
+                if seen_from == Color::Black { x = 7 - x }
+                let piece = &self.board[y][x];
                 let mut tile_color = Color::White;
                 let tile = match piece {
                     Some(p) => {
@@ -130,7 +134,18 @@ impl Game {
             }
             println!(" {}", y + 1);
         }
-        println!(" a  b  c  d  e  f  g  h");
+        match seen_from {
+            Color::White => println!(" a  b  c  d  e  f  g  h"),
+            Color::Black => println!(" h  g  f  e  d  c  b  a"),
+        }
+    }
+
+    pub fn do_move(&mut self, mve: &Move) {
+        let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
+        self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
+        self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
+
+        self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
     }
 
     pub fn get_board_score(&self, color: Color) -> f64 {
@@ -192,8 +207,38 @@ impl Game {
         all_moves
     }
 
-    pub fn get_best_move(&self, current_depth: u8, initial_depth: u8) -> Move {
+    pub fn get_best_move(&self, depth: u8) -> Move {
+        self.private_get_best_move(depth, depth).1
+    }
 
-        Move { from: [1, 1], to: [1, 1] }
+    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8) -> (f64, Move) {
+        let all_moves = self.get_all_moves(self.on_turn);
+        let mut child_games: Vec<(f64, Game)> = Vec::new();
+        
+        let mut highest_score: f64 = 0.0;
+        let mut highest_scoring_idx: usize = 0;
+        for (idx, mve) in all_moves.iter().enumerate() {
+
+            if depth == maximum_depth {
+                println!("{:.2} %", (idx as f64 / all_moves.len() as f64) * 100.0);
+            }
+
+            let mut new_game = *self;
+            new_game.do_move(&mve);
+            let game_score;
+            if depth == 0 {
+                game_score = new_game.get_board_score(new_game.on_turn);
+            } else {
+                game_score = new_game.private_get_best_move(depth - 1, maximum_depth).0;
+            }
+            child_games.push((game_score, new_game));
+
+            if game_score > highest_score {
+                highest_score = game_score;
+                highest_scoring_idx = idx;
+            }
+        }
+
+        (highest_score, all_moves[highest_scoring_idx])
     }
 }

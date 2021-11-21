@@ -2,6 +2,7 @@ use crate::consts::{ PieceType, Color, Move };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 
 
+#[derive(Clone, Copy)]
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color
@@ -96,7 +97,6 @@ impl Piece {
                 ));
             },
         }
-
         moves
     }
 

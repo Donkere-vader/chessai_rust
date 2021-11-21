@@ -13,12 +13,91 @@ impl Piece {
     //     format!("<Piece {:?} {:?}>", self.piece_type, self.color)
     // }
 
-    pub fn get_all_moves(&self, board: [[Option<Piece>; 8]; 8]) -> Vec<Move> {
-        fn walk_offset(offset: [i8; 2]) -> Vec<[i8; 2]> {
-            vec![]
+    pub fn get_all_moves(&self, x: i8, y: i8, board: &[[Option<Piece>; 8]; 8]) -> Vec<Move> {
+        fn walk_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>) -> Vec<Move> {
+            let mut new_moves: Vec<Move> = Vec::new();
+
+            let mut distance;
+            for offset in offsets {
+                distance = 0;
+                let mut current_coord = *&from;
+                loop {
+                    current_coord[0] += offset[0];
+                    current_coord[1] += offset[1];
+
+                    // Check if current_coord exists
+                    if !(0 <= current_coord[0] && current_coord[0] <= 7) || !(0 <= current_coord[1] && current_coord[1] <= 7) {
+                        break;
+                    }
+
+                    // Chech if tile is empty or takable
+                    match &board[current_coord[1] as usize][current_coord[0] as usize] {
+                        Some(p) => {
+                            if p.color != piece.color {
+                                new_moves.push( Move { from: *&from, to: *&current_coord } );
+                            }
+                            break;
+                        },
+                        None => new_moves.push( Move { from: *&from, to: *&current_coord } ),
+                    }
+
+                    // Chech if max_distance is not yet reached
+                    distance += 1;
+                    match max_distance {
+                        Some(mx_d) => {
+                            if distance == mx_d {
+                                break;
+                            }
+                        }
+                        _ => {},
+                    }
+                }
+            }
+
+            new_moves
+        }
+        fn with_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
+            let mut new_moves: Vec<Move> = Vec::new();
+
+            for offset in offsets {
+                let new_coord = [from[0] + offset[0], from[1] + offset[1]];
+
+                // Check if new_coord exists
+                if !(0 <= new_coord[0] && new_coord[0] <= 7) || !(0 <= new_coord[1] && new_coord[1] <= 7) {
+                    continue;
+                }
+
+                // Check if tile is empty or takable
+                match &board[new_coord[1] as usize][new_coord[0] as usize] {
+                    Some(p) => if p.color != piece.color { new_moves.push( Move { from: *&from, to: *&new_coord } ); },
+                    None => if !has_to_take { new_moves.push( Move { from: *&from, to: *&new_coord } ) },
+                }
+            }
+
+            new_moves
         }
 
-        vec![]
+        let mut moves: Vec<Move> = Vec::new();
+        
+        match self.piece_type {
+            PieceType::King => moves.extend(with_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false)),
+            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None)),
+            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None)),
+            PieceType::Knight => moves.extend(with_offsets(self, [x, y], board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
+            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None)),
+            PieceType::Pawn => {
+                moves.extend(with_offsets(self, [x, y], board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
+                moves.extend(walk_offsets(
+                    self,
+                    [x, y],
+                    board,
+                    if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
+                    if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
+                ));
+            },
+        }
+
+        moves
     }
 
     pub fn from_fen(fen_letter: char) -> Piece {
@@ -61,10 +140,9 @@ impl Piece {
     }
 
     pub fn score(&self, x: usize, mut y: usize) -> f64 {
-        y = match self.color {
-            Color::White => y,
-            Color::Black => 7 - y,
-        };
+        if self.color == Color::Black {
+            y = 7 - y;
+        }
 
         match self.piece_type {
             PieceType::King => SCORE_KING[y][x],
@@ -85,5 +163,9 @@ impl Piece {
             PieceType::Rook => String::from("♜"),
             PieceType::Pawn => String::from("♟︎"),
         }
+    }
+
+    pub fn repr(&self) -> String {
+        format!("<Piece {:?} {:?}>", self.piece_type, self.color)
     }
 }

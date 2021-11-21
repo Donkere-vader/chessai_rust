@@ -17,7 +17,7 @@ impl Game {
 
         if let [board_string, on_turn_fen_let, _castling, _en_passant_target_square, _haflmove_clock, _fullmove_counter] = &splitted_fen[..] {
             let mut y = 0;
-            for rank in board_string.split("/") {
+            for rank in board_string.rsplit("/") {
                 let mut x = 0;
                 for chr in rank.chars() {
                     match chr.to_digit(10) {
@@ -83,11 +83,14 @@ impl Game {
         format!("{} {} KQkq - 0 1", board_string, on_turn)
     }
     
-    pub fn show_board(&self) {
-        let mut y = 0;
-        for rank in &self.board {
-            let mut x = 0;
-            for piece in rank {
+    pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>) {
+        let highlight = match highlight {
+            Some(h) => h,
+            None => Vec::new(),
+        };
+
+        for (y, rank) in (&self.board).iter().enumerate() {
+            for (x, piece) in rank.iter().enumerate() {
                 let mut tile_color = Color::White;
                 let tile = match piece {
                     Some(p) => {
@@ -97,7 +100,17 @@ impl Game {
                     _ => String::from("   "),
                 };
 
-                if (y + x) % 2 == 0 {
+                // println!("{} {} {:?}", x, y, highlight.contains(&[x as i8, y as i8]));
+
+                if highlight.contains(&[x as i8, y as i8]) {
+                    print!(
+                        "{}",
+                        match tile_color {
+                            Color::White => tile.on_green().blue(),
+                            Color::Black => tile.on_green().red(),
+                        }
+                    );
+                } else if (y + x) % 2 == 0 {
                     print!(
                         "{}",
                         match tile_color {
@@ -114,11 +127,10 @@ impl Game {
                         }
                     );
                 }
-                x += 1;
             }
-            y += 1;
-            println!();
+            println!(" {}", y + 1);
         }
+        println!(" a  b  c  d  e  f  g  h");
     }
 
     pub fn get_board_score(&self, color: Color) -> f64 {
@@ -165,8 +177,19 @@ impl Game {
         board_score
     }
 
-    fn get_all_moves(&self) -> Vec<Move> {
-        vec![]
+    pub fn get_all_moves(&self, color: Color) -> Vec<Move> {
+        let mut all_moves = Vec::new();
+
+        for (y, rank) in (&self.board).iter().enumerate() {
+            for (x, piece) in rank.iter().enumerate() {
+                match piece {
+                    Some(p) => if color == p.color { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self.board)) },
+                    None => {},
+                }
+            }
+        }
+
+        all_moves
     }
 
     pub fn get_best_move(&self, current_depth: u8, initial_depth: u8) -> Move {

@@ -1,6 +1,7 @@
 use colored::*;
 use crate::piece::{ Piece };
 use crate::consts::{ Color, Move, PieceType };
+use std::thread;
 
 
 #[derive(Copy, Clone)]
@@ -48,6 +49,7 @@ impl Game {
         }
     }
 
+    #[allow(dead_code)]
     pub fn to_fen(&self) -> String {
         let mut board_string = String::new();
 
@@ -84,6 +86,7 @@ impl Game {
         format!("{} {} KQkq - 0 1", board_string, on_turn)
     }
     
+    #[allow(dead_code)]
     pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>, seen_from: Color) {
         let highlight = match highlight {
             Some(h) => h,
@@ -208,37 +211,65 @@ impl Game {
     }
 
     pub fn get_best_move(&self, depth: u8) -> Move {
-        self.private_get_best_move(depth, depth).1
-    }
-
-    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8) -> (f64, Move) {
         let all_moves = self.get_all_moves(self.on_turn);
-        let mut child_games: Vec<(f64, Game)> = Vec::new();
-        
-        let mut highest_score: f64 = 0.0;
-        let mut highest_scoring_idx: usize = 0;
-        for (idx, mve) in all_moves.iter().enumerate() {
 
-            if depth == maximum_depth {
-                println!("{:.2} %", (idx as f64 / all_moves.len() as f64) * 100.0);
-            }
+        let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
 
+
+        for mve in all_moves.iter() {
             let mut new_game = *self;
             new_game.do_move(&mve);
+            threads.push(
+                thread::spawn(move || {
+                    // generate new game from move
+                    let game_score = new_game.private_get_best_move(depth - 1, depth);
+
+                    game_score
+                })
+            );
+        }
+
+        let mut best_move = all_moves[0];
+        let mut highest_score: f64 = 0.0;
+
+        let mut idx = 0;
+        let threads_len = threads.len();
+        for t in threads {
+            let result = t.join().unwrap();
+            if result > highest_score {
+                best_move = all_moves[idx];
+                highest_score = result;
+            }
+            idx += 1;
+            println!("Joined: {} / {} = {:.2} %", idx, threads_len, idx as f64 / threads_len as f64 * 100.0);
+        }
+
+        best_move
+    }
+
+    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8) -> f64 {
+        let all_moves = self.get_all_moves(self.on_turn);
+
+        let mut highest_score: f64 = 0.0;
+        for mve in all_moves.iter() {
+            // generate new game from move
+            let mut new_game = *self;
+            new_game.do_move(&mve);
+
+            // calculate the score of the game
             let game_score;
             if depth == 0 {
                 game_score = new_game.get_board_score(new_game.on_turn);
             } else {
-                game_score = new_game.private_get_best_move(depth - 1, maximum_depth).0;
+                game_score = new_game.private_get_best_move(depth - 1, maximum_depth);
             }
-            child_games.push((game_score, new_game));
 
+            // check if this is the best peforming one
             if game_score > highest_score {
                 highest_score = game_score;
-                highest_scoring_idx = idx;
             }
         }
 
-        (highest_score, all_moves[highest_scoring_idx])
+        highest_score
     }
 }

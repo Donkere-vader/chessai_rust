@@ -10,10 +10,6 @@ pub struct Piece {
 
 
 impl Piece {
-    // pub fn repr(&self) -> String {
-    //     format!("<Piece {:?} {:?}>", self.piece_type, self.color)
-    // }
-
     pub fn get_all_moves(&self, x: i8, y: i8, board: &[[Option<Piece>; 8]; 8]) -> Vec<Move> {
         fn walk_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>) -> Vec<Move> {
             let mut new_moves: Vec<Move> = Vec::new();
@@ -165,6 +161,7 @@ impl Piece {
         }
     }
 
+    #[allow(dead_code)]
     pub fn repr(&self) -> String {
         format!("<Piece {:?} {:?}>", self.piece_type, self.color)
     }

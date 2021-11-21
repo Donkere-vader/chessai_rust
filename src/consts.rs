@@ -24,6 +24,7 @@ pub struct Move {
 }
 
 impl Move {
+    #[allow(dead_code)]
     pub fn repr(&self) -> String {
         let from = format!("{}{}", (self.from[0] + 97) as u8 as char, self.from[1] + 1);
         let to = format!("{}{}", (self.to[0] + 97) as u8 as char, self.to[1] + 1);

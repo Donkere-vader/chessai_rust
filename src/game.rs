@@ -1,6 +1,6 @@
 use colored::*;
 use crate::piece::{ Piece };
-use crate::consts::{ Color, Move, PieceType };
+use crate::consts::{ Color, Move, PieceType, SearchDepth };
 use std::thread;
 
 
@@ -210,11 +210,19 @@ impl Game {
         all_moves
     }
 
-    pub fn get_best_move(&self, depth: u8) -> Move {
+    pub fn get_best_move(&self, search_depth: SearchDepth) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
 
+        let b = match search_depth {
+            SearchDepth::Deep => 7.0,
+            SearchDepth::Medium => 6.0,
+            SearchDepth::Shallow => 5.0,
+        };
+
+        let depth = (-0.125 * (all_moves.len() as i64 - 20 as i64) as f64 + b).round() as u8;
+        println!("N Moves: {}\nSearch depth: {}", all_moves.len(), depth);
 
         for mve in all_moves.iter() {
             let mut new_game = *self;

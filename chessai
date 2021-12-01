@@ -96,7 +96,7 @@ class GameWindow(tk.Tk):
         self.frames['side_bar'].grid(row=0, column=1)
 
     def ai_move(self):
-        best_move = chess_ai.get_best_move(self.dumps(), 5)
+        best_move = chess_ai.get_best_move(self.dumps())
         self.move(best_move['from'], best_move['to'])
 
     def draw(self):

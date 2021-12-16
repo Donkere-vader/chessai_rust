@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter.constants import TOP
 import chess_ai
+from copy import deepcopy
 
 
 UNICODE_CHESS_PIECES = {
@@ -34,8 +35,10 @@ class GameWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("chess ai")
+        self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        # self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        self.loads("7k/7r/6r1/K7/8/8/8/8 b KQkq - 0 1")
         self.selected_tile = None
         self.recent_move = []
         self.initial_draw()
@@ -58,10 +61,15 @@ class GameWindow(tk.Tk):
 
     def move(self, frm, to):
         piece = self.board[frm[1]][frm[0]]
+        self.boards_history.append(deepcopy(self.board))
         self.board[to[1]][to[0]] = piece
         self.board[frm[1]][frm[0]] = None
         self.recent_move = [tuple(to), tuple(frm)]
         self.draw()
+
+    def undo(self):
+        if len(self.boards_history) > 0:
+            self.board = self.boards_history.pop(len(self.boards_history) - 1)
 
     def initial_draw(self):
         self.tile_buttons = []
@@ -93,6 +101,12 @@ class GameWindow(tk.Tk):
             command=self.ai_move
         )
         ai_button.pack(side=TOP)
+        undo_button = tk.Button(
+            self.frames['side_bar'],
+            text="Undo",
+            command=self.undo,
+        )
+        undo_button.pack(side=TOP)
         self.frames['side_bar'].grid(row=0, column=1)
 
     def ai_move(self):

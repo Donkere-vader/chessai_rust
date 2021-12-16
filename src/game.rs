@@ -228,7 +228,6 @@ impl Game {
         for mve in all_moves.iter() {
             let mut new_game = *self;
             new_game.do_move(&mve);
-            let m = *mve;
             threads.push(
                 thread::spawn(move || {
                     let mut game_score = new_game.private_get_best_move(depth - 1, depth);

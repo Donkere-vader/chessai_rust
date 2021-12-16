@@ -3,6 +3,7 @@ use crate::piece::{ Piece };
 use crate::consts::{ Color, Move, PieceType, SearchDepth };
 use std::thread;
 
+const CHECK_MATE_SCORE: f64 = 10000.0;
 
 #[derive(Copy, Clone)]
 pub struct Game {
@@ -186,7 +187,7 @@ impl Game {
         }
 
         if !white_king_present || !black_king_present {
-            board_score = f64::INFINITY;
+            board_score = CHECK_MATE_SCORE;
             if (!white_king_present && color == Color::White) || (!black_king_present && color == Color::Black) {
                 board_score *= -1.0;
             }
@@ -227,11 +228,11 @@ impl Game {
         for mve in all_moves.iter() {
             let mut new_game = *self;
             new_game.do_move(&mve);
+            let m = *mve;
             threads.push(
                 thread::spawn(move || {
-                    // generate new game from move
-                    let game_score = new_game.private_get_best_move(depth - 1, depth);
-
+                    let mut game_score = new_game.private_get_best_move(depth - 1, depth);
+                    game_score *= -1.0;
                     game_score
                 })
             );
@@ -245,9 +246,11 @@ impl Game {
         for t in threads {
             let result = t.join().unwrap();
             if result > highest_score {
+                // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
                 highest_score = result;
             }
+
             idx += 1;
             println!("Joined: {} / {} = {:.2} %", idx, threads_len, idx as f64 / threads_len as f64 * 100.0);
         }
@@ -258,21 +261,27 @@ impl Game {
     pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8) -> f64 {
         let all_moves = self.get_all_moves(self.on_turn);
 
-        let mut highest_score: f64 = 0.0;
+        let mut highest_score: f64 = -CHECK_MATE_SCORE;
         for mve in all_moves.iter() {
             // generate new game from move
             let mut new_game = *self;
             new_game.do_move(&mve);
 
             // calculate the score of the game
-            let game_score;
+            let mut game_score: f64;
             if depth == 0 {
                 game_score = new_game.get_board_score(new_game.on_turn);
             } else {
-                game_score = new_game.private_get_best_move(depth - 1, maximum_depth);
+                let score = new_game.private_get_best_move(depth - 1, maximum_depth);
+                game_score = score * -1.0;
             }
 
             // check if this is the best peforming one
+            if game_score > CHECK_MATE_SCORE - maximum_depth as f64 {
+                game_score -= 1.0;
+            } else if game_score < -CHECK_MATE_SCORE + maximum_depth as f64 {
+                game_score += 1.0;
+            }
             if game_score > highest_score {
                 highest_score = game_score;
             }

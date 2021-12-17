@@ -6,13 +6,12 @@ mod piece_scores;
 use pyo3::prelude::*;
 use std::collections::{ HashMap };
 use game::{ Game };
-use consts::{ SearchDepth };
 
 
 #[pyfunction]
 fn get_best_move(fen_code: String) -> HashMap<String, [i8; 2]> {
     let game = Game::from_fen(fen_code);
-    let best_move = game.get_best_move(SearchDepth::Medium);
+    let best_move = game.get_best_move();
     let mut map: HashMap<String, [i8; 2]> = HashMap::new();
     map.insert(String::from("from"), best_move.from);
     map.insert(String::from("to"), best_move.to);

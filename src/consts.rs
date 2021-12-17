@@ -31,9 +31,3 @@ impl Move {
         format!("<Move ({} -> {})>", from, to)
     }
 }
-
-pub enum SearchDepth {
-    Shallow,
-    Medium,
-    Deep
-}

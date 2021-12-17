@@ -1,6 +1,6 @@
 use colored::*;
 use crate::piece::{ Piece };
-use crate::consts::{ Color, Move, PieceType, SearchDepth };
+use crate::consts::{ Color, Move, PieceType };
 use std::thread;
 
 const CHECK_MATE_SCORE: f64 = 10000.0;
@@ -226,16 +226,10 @@ impl Game {
         total
     }
 
-    pub fn get_best_move(&self, search_depth: SearchDepth) -> Move {
+    pub fn get_best_move(&self) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
-
-        let b = match search_depth {
-            SearchDepth::Deep => 7.0,
-            SearchDepth::Medium => 6.0,
-            SearchDepth::Shallow => 5.0,
-        };
 
         let n_pieces = self.get_number_of_pieces();
         let depth = (-(n_pieces as f64 / 33.0).powi(2) + 6.0).round() as u8;

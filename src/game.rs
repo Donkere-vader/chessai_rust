@@ -226,13 +226,12 @@ impl Game {
         total
     }
 
-    pub fn get_best_move(&self) -> Move {
+    pub fn get_best_move(&self, depth: u8) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
 
         let n_pieces = self.get_number_of_pieces();
-        let depth = (-(n_pieces as f64 / 33.0).powi(2) + 6.0).round() as u8;
         println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth);
 
         for mve in all_moves.iter() {

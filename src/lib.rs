@@ -9,9 +9,9 @@ use game::{ Game };
 
 
 #[pyfunction]
-fn get_best_move(fen_code: String) -> HashMap<String, [i8; 2]> {
+fn get_best_move(fen_code: String, depth: u8) -> HashMap<String, [i8; 2]> {
     let game = Game::from_fen(fen_code);
-    let best_move = game.get_best_move();
+    let best_move = game.get_best_move(depth);
     let mut map: HashMap<String, [i8; 2]> = HashMap::new();
     map.insert(String::from("from"), best_move.from);
     map.insert(String::from("to"), best_move.to);

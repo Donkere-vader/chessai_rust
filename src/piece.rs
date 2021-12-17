@@ -10,7 +10,7 @@ pub struct Piece {
 
 impl Piece {
     pub fn get_all_moves(&self, x: i8, y: i8, board: &[[Option<Piece>; 8]; 8]) -> Vec<Move> {
-        fn walk_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>) -> Vec<Move> {
+        fn walk_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
             let mut new_moves: Vec<Move> = Vec::new();
 
             let mut distance;
@@ -29,7 +29,7 @@ impl Piece {
                     // Chech if tile is empty or takable
                     match &board[current_coord[1] as usize][current_coord[0] as usize] {
                         Some(p) => {
-                            if p.color != piece.color {
+                            if p.color != piece.color && take {
                                 new_moves.push( Move { from: *&from, to: *&current_coord } );
                             }
                             break;
@@ -77,10 +77,10 @@ impl Piece {
         
         match self.piece_type {
             PieceType::King => moves.extend(with_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false)),
-            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None)),
-            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None)),
+            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None, true)),
+            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None, true)),
             PieceType::Knight => moves.extend(with_offsets(self, [x, y], board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
-            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None)),
+            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
             PieceType::Pawn => {
                 moves.extend(with_offsets(self, [x, y], board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
                 moves.extend(walk_offsets(
@@ -89,6 +89,7 @@ impl Piece {
                     board,
                     if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
                     if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
+                    false,
                 ));
             },
         }

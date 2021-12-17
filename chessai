@@ -40,8 +40,8 @@ class GameWindow(tk.Tk):
         self.title("chess ai")
         self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-        # self.loads("7k/7r/6r1/K7/8/8/8/8 b KQkq - 0 1")
+        # self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        self.loads("7k/7r/6r1/K7/8/8/8/8 b KQkq - 0 1")
         self.depth = 4
         self.viewing_side = "white"
         self.selected_tile = None
@@ -165,7 +165,10 @@ class GameWindow(tk.Tk):
         self.draw()
 
     def ai_move(self):
+        start = dt.now()
         best_move = chess_ai.get_best_move(self.dumps(), self.depth)
+        elapsed = dt.now() - start
+        print(f"TIME ELPASED: {elapsed}")
         self.move(best_move['from'], best_move['to'])
 
     def draw(self):

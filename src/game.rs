@@ -160,9 +160,9 @@ impl Game {
 
         let mut y = 0;
         let mut x;
-        for rank in &self.board {
+        for rank in self.board.iter() {
             x = 0;
-            for piece in rank {
+            for piece in rank.iter() {
                 match piece {
                     Some(p) => {
                         let piece_score = p.score(x, y);
@@ -211,6 +211,21 @@ impl Game {
         all_moves
     }
 
+    pub fn get_number_of_pieces(&self) -> u8 {
+        let mut total = 0;
+
+        for y in 0..8 {
+            for x in 0..8 {
+                match self.board[y][x] {
+                    Some(_) => total += 1,
+                    None => {},
+                }
+            }
+        }
+
+        total
+    }
+
     pub fn get_best_move(&self, search_depth: SearchDepth) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
@@ -222,16 +237,16 @@ impl Game {
             SearchDepth::Shallow => 5.0,
         };
 
-        let depth = (-0.125 * (all_moves.len() as i64 - 20 as i64) as f64 + b).round() as u8;
-        println!("N Moves: {}\nSearch depth: {}", all_moves.len(), depth);
+        let n_pieces = self.get_number_of_pieces();
+        let depth = (-(n_pieces as f64 / 33.0).powi(2) + 6.0).round() as u8;
+        println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth);
 
         for mve in all_moves.iter() {
             let mut new_game = *self;
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let mut game_score = new_game.private_get_best_move(depth - 1, depth);
-                    game_score *= -1.0;
+                    let game_score = new_game.private_get_best_move(depth - 1, depth) * -1.0;
                     game_score
                 })
             );
@@ -244,6 +259,7 @@ impl Game {
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
+            println!("{: <20} -> {}", all_moves[idx].repr(), result);
             if result > highest_score {
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
@@ -269,10 +285,9 @@ impl Game {
             // calculate the score of the game
             let mut game_score: f64;
             if depth == 0 {
-                game_score = new_game.get_board_score(new_game.on_turn);
+                game_score = new_game.get_board_score(new_game.on_turn) * -1.0;
             } else {
-                let score = new_game.private_get_best_move(depth - 1, maximum_depth);
-                game_score = score * -1.0;
+                game_score = new_game.private_get_best_move(depth - 1, maximum_depth) * -1.0;
             }
 
             // check if this is the best peforming one

@@ -6,6 +6,7 @@ from copy import deepcopy
 import json
 from datetime import datetime as dt
 import os
+from argparse import ArgumentParser
 
 
 UNICODE_CHESS_PIECES = {
@@ -35,22 +36,34 @@ FEN_PIECE_LETTERS = {
 
 
 class GameWindow(tk.Tk):
-    def __init__(self):
+    def __init__(self, fen_code, log_file_name, color):
         super().__init__()
         self.title("chess ai")
         self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+        # self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
         # self.loads("7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1")
         # self.loads("3r4/pp3BpQ/2k5/8/8/1P4P1/P2P2KP/8 b KQkq - 0 1")
+        self.loads(fen_code)
+        if color in ["white", "black"]:
+            self.color = color
+        else:
+            raise Exception(f"Invalid color: {color}")
         self.depth = 4
         self.viewing_side = "white"
         self.selected_tile = None
         self.recent_move = []
         self.log = []
 
-        now = dt.now()
-        self.log_file_name = f"logs/game_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}.json"
+        if log_file_name is None:
+            now = dt.now()
+            self.log_file_name = f"logs/game_{now.year}_{now.month}_{now.day}_{now.hour}_{now.minute}_{now.second}.json"
+        else:
+            self.log_file_name = f"logs/{log_file_name}" if log_file_name.endswith(".json") else f"logs/{log_file_name}.json"
+    
+            if os.path.isdir("logs") and os.path.exists(f"logs/{self.log_file_name}"):
+                with open(f"logs/{self.log_file_name}", 'r') as f:
+                    self.log = json.load(f)
 
         self.initial_draw()
         self.draw()
@@ -217,7 +230,7 @@ class GameWindow(tk.Tk):
                 board_string += str(empty_on_row)
             board_string += "/"
         
-        return f"{board_string[:-1]} b KQkq - 0 1"
+        return f"{board_string[:-1]} {'b' if self.color == 'black' else 'w'} KQkq - 0 1"
 
     def loads(self, fen_code):
         board_string = fen_code.split()[0]
@@ -234,5 +247,30 @@ class GameWindow(tk.Tk):
                 self.board[y][x] = ("white" if char.upper() == char else "black", list(FEN_PIECE_LETTERS.keys())[list(FEN_PIECE_LETTERS.values()).index(char.lower())])
                 x += 1
 
-root = GameWindow()
+
+parser = ArgumentParser("Chess ai")
+
+parser.add_argument(
+    "--fencode",
+    default="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    help="The fen code to use at the start of the game"
+)
+
+parser.add_argument(
+    "--logfilename",
+    type=str,
+    default=None,
+    help="The file to write the logs to"
+)
+
+parser.add_argument(
+    "--color",
+    default="black",
+    help="The color that the AI will play as"
+)
+
+args = parser.parse_args()
+
+
+root = GameWindow(args.fencode, args.logfilename, args.color)
 root.mainloop()

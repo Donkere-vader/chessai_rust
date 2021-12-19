@@ -281,7 +281,7 @@ impl Game {
             // calculate the score of the game
             let mut game_score: f64;
             game_score = new_game.get_board_score(new_game.on_turn) * -1.0;
-            if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
+            if game_score == -CHECK_MATE_SCORE {
                 return CHECK_MATE_SCORE * -1.0;
             }
             if depth != 0 {

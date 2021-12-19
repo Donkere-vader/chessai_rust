@@ -41,9 +41,6 @@ class GameWindow(tk.Tk):
         self.title("chess ai")
         self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        # self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-        # self.loads("7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1")
-        # self.loads("3r4/pp3BpQ/2k5/8/8/1P4P1/P2P2KP/8 b KQkq - 0 1")
         self.loads(fen_code)
         if color in ["white", "black"]:
             self.color = color

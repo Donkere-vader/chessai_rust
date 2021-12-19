@@ -41,7 +41,8 @@ class GameWindow(tk.Tk):
         self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
         self.loads("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
-        # self.loads("7k/7r/6r1/K7/8/8/8/8 b KQkq - 0 1")
+        # self.loads("7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1")
+        # self.loads("3r4/pp3BpQ/2k5/8/8/1P4P1/P2P2KP/8 b KQkq - 0 1")
         self.depth = 4
         self.viewing_side = "white"
         self.selected_tile = None
@@ -165,14 +166,17 @@ class GameWindow(tk.Tk):
         self.draw()
 
     def ai_move(self):
+        start = dt.now()
         best_move = chess_ai.get_best_move(self.dumps(), self.depth)
+        elapsed = dt.now() - start
+        print(f"Calculation time: {elapsed}")
         self.move(best_move['from'], best_move['to'])
 
     def draw(self):
         for y, button_row in enumerate(reversed(self.tile_buttons) if self.viewing_side == "black" else self.tile_buttons):
             for x, button in enumerate(reversed(button_row) if self.viewing_side == "black" else button_row):
                 tile = self.board[y][x]
-                bg = "#f0d9b5" if (x + y) % 2 == 0 else "#b58863"
+                bg = "#f0d9b5" if ((x + y) % 2 == 0 and self.viewing_side == "white") or ((x + y) % 2 == 1 and self.viewing_side == "black") else "#b58863" 
                 if (x, y) in self.recent_move:
                     bg = "#c4e580"
                 if (x, y) == self.selected_tile:

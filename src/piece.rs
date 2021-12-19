@@ -142,10 +142,10 @@ impl Piece {
 
         match self.piece_type {
             PieceType::King => SCORE_KING[y][x],
-            PieceType::Queen => SCORE_QUEEN[y][x] * 9.0,
-            PieceType::Bishop => SCORE_BISHOP[y][x] * 3.0,
-            PieceType::Knight => SCORE_KNIGHT[y][x] * 3.0,
-            PieceType::Rook => SCORE_ROOK[y][x] * 5.0,
+            PieceType::Queen => SCORE_QUEEN[y][x] + 9.0,
+            PieceType::Bishop => SCORE_BISHOP[y][x] + 3.0,
+            PieceType::Knight => SCORE_KNIGHT[y][x] + 3.0,
+            PieceType::Rook => SCORE_ROOK[y][x] + 5.0,
             PieceType::Pawn => SCORE_PAWN[y][x],
         }
     }

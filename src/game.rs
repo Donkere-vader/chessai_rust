@@ -246,23 +246,26 @@ impl Game {
         }
 
         let mut best_move = all_moves[0];
-        let mut highest_score: f64 = 0.0;
+        let mut highest_score: f64 = -CHECK_MATE_SCORE;
 
         let mut idx = 0;
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
-            println!("{: <20} -> {}", all_moves[idx].repr(), result);
+            print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx, threads_len), all_moves[idx].repr(), result);
             if result > highest_score {
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
                 highest_score = result;
+                print!("Best found yet");
             }
+            println!();
 
             idx += 1;
-            println!("Joined: {} / {} = {:.2} %", idx, threads_len, idx as f64 / threads_len as f64 * 100.0);
         }
 
+
+        println!("Best move: {}", best_move.repr());
         best_move
     }
 
@@ -277,9 +280,11 @@ impl Game {
 
             // calculate the score of the game
             let mut game_score: f64;
-            if depth == 0 {
-                game_score = new_game.get_board_score(new_game.on_turn) * -1.0;
-            } else {
+            game_score = new_game.get_board_score(new_game.on_turn) * -1.0;
+            if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
+                return CHECK_MATE_SCORE * -1.0;
+            }
+            if depth != 0 {
                 game_score = new_game.private_get_best_move(depth - 1, maximum_depth) * -1.0;
             }
 

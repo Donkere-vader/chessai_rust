@@ -15,7 +15,7 @@ UNICODE_CHESS_PIECES = {
     "bishop": "♝",
     "king": "♚",
     "queen": "♛",
-    "pawn": "♟︎",
+    "pawn": "♟",
 }
 
 
@@ -47,7 +47,7 @@ class GameWindow(tk.Tk):
         else:
             raise Exception(f"Invalid color: {color}")
         self.depth = 4
-        self.viewing_side = "white"
+        self.viewing_side = self.color
         self.selected_tile = None
         self.recent_move = []
         self.log = []
@@ -186,7 +186,7 @@ class GameWindow(tk.Tk):
         for y, button_row in enumerate(reversed(self.tile_buttons) if self.viewing_side == "black" else self.tile_buttons):
             for x, button in enumerate(reversed(button_row) if self.viewing_side == "black" else button_row):
                 tile = self.board[y][x]
-                bg = "#f0d9b5" if ((x + y) % 2 == 0 and self.viewing_side == "white") or ((x + y) % 2 == 1 and self.viewing_side == "black") else "#b58863" 
+                bg = "#f0d9b5" if (x + y) % 2 == 1 else "#b58863" 
                 if (x, y) in self.recent_move:
                     bg = "#c4e580"
                 if (x, y) == self.selected_tile:

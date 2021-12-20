@@ -82,6 +82,8 @@ class GameWindow(tk.Tk):
 
     def move(self, frm, to):
         piece = self.board[frm[1]][frm[0]]
+        if piece[1] == 'pawn' and to[1] in [0, 7]:
+            piece = (piece[0], 'queen')
         self.boards_history.append(deepcopy(self.board))
         self.board[to[1]][to[0]] = piece
         self.board[frm[1]][frm[0]] = None

@@ -145,9 +145,24 @@ impl Game {
     }
 
     pub fn do_move(&mut self, mve: &Move) {
+        let mut done = false;
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
-        self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
-        self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
+        match piece {
+            Some(p) => {
+                println!("Piece: {}", p.repr());
+                if p.piece_type == PieceType::Pawn && (mve.to[1] == 0 || mve.to[1] == 7) {
+                    self.board[mve.to[1] as usize ][mve.to[0] as usize] = Some(Piece { piece_type: PieceType::Queen, color: p.color });
+                    self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
+                    done = true;
+                }
+            },
+            None => {},
+        }
+
+        if !done {
+            self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
+            self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;    
+        }
 
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
     }

@@ -149,7 +149,6 @@ impl Game {
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
         match piece {
             Some(p) => {
-                println!("Piece: {}", p.repr());
                 if p.piece_type == PieceType::Pawn && (mve.to[1] == 0 || mve.to[1] == 7) {
                     self.board[mve.to[1] as usize ][mve.to[0] as usize] = Some(Piece { piece_type: PieceType::Queen, color: p.color });
                     self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;

@@ -266,7 +266,7 @@ impl Game {
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
-            print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx, threads_len), all_moves[idx].repr(), result);
+            print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result);
             if result > highest_score {
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];

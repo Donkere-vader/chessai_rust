@@ -135,17 +135,17 @@ impl Piece {
         }
     }
 
-    pub fn score(&self, x: usize, mut y: usize) -> f64 {
+    pub fn score(&self, x: usize, mut y: usize) -> i64 {
         if self.color == Color::Black {
             y = 7 - y;
         }
 
         match self.piece_type {
             PieceType::King => SCORE_KING[y][x],
-            PieceType::Queen => SCORE_QUEEN[y][x] + 9.0,
-            PieceType::Bishop => SCORE_BISHOP[y][x] + 3.0,
-            PieceType::Knight => SCORE_KNIGHT[y][x] + 3.0,
-            PieceType::Rook => SCORE_ROOK[y][x] + 5.0,
+            PieceType::Queen => SCORE_QUEEN[y][x] * 9,
+            PieceType::Bishop => SCORE_BISHOP[y][x] * 3,
+            PieceType::Knight => SCORE_KNIGHT[y][x] * 3,
+            PieceType::Rook => SCORE_ROOK[y][x] * 5,
             PieceType::Pawn => SCORE_PAWN[y][x],
         }
     }
@@ -157,7 +157,7 @@ impl Piece {
             PieceType::Bishop => String::from("♝"),
             PieceType::Knight => String::from("♞"),
             PieceType::Rook => String::from("♜"),
-            PieceType::Pawn => String::from("♟︎"),
+            PieceType::Pawn => String::from("♟"),
         }
     }
 

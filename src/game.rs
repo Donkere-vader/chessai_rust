@@ -3,7 +3,7 @@ use crate::piece::{ Piece };
 use crate::consts::{ Color, Move, PieceType };
 use std::thread;
 
-const CHECK_MATE_SCORE: f64 = 10000.0;
+const CHECK_MATE_SCORE: i64 = i64::MAX;
 
 #[derive(Copy, Clone)]
 pub struct Game {
@@ -166,8 +166,8 @@ impl Game {
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
     }
 
-    pub fn get_board_score(&self, color: Color) -> f64 {
-        let mut board_score: f64 = 0.0;
+    pub fn get_board_score(&self, color: Color) -> i64 {
+        let mut board_score: i64 = 0;
 
         let mut white_king_present = false;
         let mut black_king_present = false;
@@ -203,7 +203,7 @@ impl Game {
         if !white_king_present || !black_king_present {
             board_score = CHECK_MATE_SCORE;
             if (!white_king_present && color == Color::White) || (!black_king_present && color == Color::Black) {
-                board_score *= -1.0;
+                board_score *= -1;
             }
         }
 
@@ -253,7 +253,7 @@ impl Game {
     pub fn get_best_move(&self, depth: u8, verbose: bool) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
-        let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
+        let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
 
         let n_pieces = self.get_number_of_pieces();
         if verbose { println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth); }
@@ -263,14 +263,14 @@ impl Game {
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1.0;
+                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1;
                     game_score
                 })
             );
         }
 
         let mut best_move = all_moves[0];
-        let mut highest_score: f64 = -CHECK_MATE_SCORE;
+        let mut highest_score: i64 = -CHECK_MATE_SCORE;
 
         let mut idx = 0;
         let threads_len = threads.len();
@@ -293,30 +293,30 @@ impl Game {
         best_move
     }
 
-    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: f64) -> f64 {
+    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> i64 {
         let all_moves = self.get_all_moves(self.on_turn);
 
-        let mut highest_score: f64 = -CHECK_MATE_SCORE;
+        let mut highest_score: i64 = -CHECK_MATE_SCORE;
         for mve in all_moves.iter() {
             // generate new game from move
             let mut new_game = *self;
             new_game.do_move(&mve);
 
             // calculate the score of the game
-            let mut game_score: f64;
-            game_score = new_game.get_board_score(new_game.on_turn) * -1.0;
+            let mut game_score: i64;
+            game_score = new_game.get_board_score(new_game.on_turn) * -1;
             if game_score == -CHECK_MATE_SCORE {
-                return CHECK_MATE_SCORE * -1.0;
+                return CHECK_MATE_SCORE * -1;
             }
             if depth != 0 {
-                game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1.0) * -1.0;
+                game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1) * -1;
             }
 
             // check if this is the best peforming one
-            if game_score > CHECK_MATE_SCORE - maximum_depth as f64 {
-                game_score -= 1.0;
-            } else if game_score < -CHECK_MATE_SCORE + maximum_depth as f64 {
-                game_score += 1.0;
+            if game_score > CHECK_MATE_SCORE - maximum_depth as i64 {
+                game_score -= 1;
+            } else if game_score < -CHECK_MATE_SCORE + maximum_depth as i64 {
+                game_score += 1;
             }
             if game_score > highest_score {
                 highest_score = game_score;

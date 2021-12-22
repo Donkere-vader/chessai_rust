@@ -8,7 +8,7 @@ FEN_PIECE_LETTERS = {
     "bishop": "b"
 }
 
-def dumps(game_board, color) -> str:
+def dumps(game_board, color, castling) -> str:
     board_string = ""
 
     for rank in reversed(game_board):
@@ -28,12 +28,18 @@ def dumps(game_board, color) -> str:
             board_string += str(empty_on_row)
         board_string += "/"
     
-    return f"{board_string[:-1]} {'b' if color == 'black' else 'w'} KQkq - 0 1"
+    castling_list = []
+    for piece in castling:
+        let = 'k' if piece[1] == 'king' else 'q'
+        castling_list.append(let.upper() if piece[0] == 'white' else let)
+    
+    return f"{board_string[:-1]} {'b' if color == 'black' else 'w'} {''.join(castling_list) if len(castling_list) else '-'} - 0 1"
 
 
 def loads(fen_code):
     board = [[None for _ in range(8)] for _ in range(8)]
     board_string = fen_code.split()[0]
+    castling_string = fen_code.split()[2]
 
     y = 7
     x = 0
@@ -47,4 +53,10 @@ def loads(fen_code):
             board[y][x] = ("white" if char.upper() == char else "black", list(FEN_PIECE_LETTERS.keys())[list(FEN_PIECE_LETTERS.values()).index(char.lower())])
             x += 1
 
-    return board
+    castling = []
+    for char in castling_string:
+        if char == "-":
+            break
+        castling.append(("white" if char.upper() == char else "black", list(FEN_PIECE_LETTERS.keys())[list(FEN_PIECE_LETTERS.values()).index(char.lower())]))
+
+    return board, castling

@@ -5,10 +5,11 @@ use std::thread;
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
 
-#[derive(Copy, Clone)]
+#[derive(Clone)]
 pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
+    pub castle: Vec<Piece>,
 }
 
 
@@ -16,9 +17,10 @@ impl Game {
     pub fn from_fen(fen_code: String) -> Game {
         let splitted_fen = fen_code.split_whitespace().take(6).collect::<Vec<&str>>();
         let mut board: [[Option<Piece>; 8]; 8] = Default::default();
+        let mut castle_vec = Vec::new();
         let on_turn;
 
-        if let [board_string, on_turn_fen_let, _castling, _en_passant_target_square, _haflmove_clock, _fullmove_counter] = &splitted_fen[..] {
+        if let [board_string, on_turn_fen_let, castling, _en_passant_target_square, _haflmove_clock, _fullmove_counter] = &splitted_fen[..] {
             let mut y = 0;
             for rank in board_string.rsplit("/") {
                 let mut x = 0;
@@ -40,6 +42,11 @@ impl Game {
             }
             
             on_turn = if **on_turn_fen_let == String::from("w") { Color::White } else { Color::Black };
+
+            for piece_char in castling.chars() {
+                if piece_char == '-' { break; }
+                castle_vec.push(Piece::from_fen(piece_char));
+            }
         } else {
             panic!("Illegal FEN code");
         }
@@ -47,6 +54,7 @@ impl Game {
         Game {
             board: board,
             on_turn: on_turn,
+            castle: castle_vec,
         }
     }
 
@@ -56,7 +64,7 @@ impl Game {
 
         let mut empty_spaces;
         let mut rank_idx = 0;
-        for rank in &self.board {
+        for rank in self.board.iter().rev() {
             empty_spaces = 0;
             for piece in rank {
                 match piece {
@@ -84,9 +92,19 @@ impl Game {
             Color::Black => String::from("b"),
         };
 
-        format!("{} {} KQkq - 0 1", board_string, on_turn)
+        let mut castling_string = String::new();
+        if self.castle.len() > 0 {
+            for piece in self.castle.iter() {
+                println!("{}", piece.repr());
+                castling_string += &piece.to_fen();
+            }
+        } else {
+            castling_string = String::from("-");
+        }
+
+        format!("{} {} {} - 0 1", board_string, on_turn, castling_string)
     }
-    
+
     #[allow(dead_code)]
     pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>, seen_from: Color) {
         let highlight = match highlight {
@@ -150,12 +168,50 @@ impl Game {
 
         match mve.move_type {
             MoveType::Standard => {
+                // check for disable castle
+                for p in vec![piece, self.board[mve.to[1] as usize ][mve.to[0] as usize]] {
+                    match p {
+                        Some(p2) => {
+                            if self.castle.contains(&p2) {
+                                self.castle.remove(self.castle.iter().position(|x| *x == p2).unwrap());
+                            } else {
+                                if p2.piece_type == PieceType::Rook {
+                                    let to_remove_piece = Piece { piece_type: if mve.from[0] == 0 { PieceType::Queen } else { PieceType::King }, color: p2.color};
+                                    if self.castle.contains(&to_remove_piece) {
+                                        self.castle.remove(self.castle.iter().position(|x| *x == to_remove_piece).unwrap());
+                                    }
+                                }
+                            }
+                        },
+                        None => {},
+                    };
+                }
+
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
             },
             MoveType::Promote => {
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve.piece;
             },
-            MoveType::Castle => {},
+            MoveType::Castle => {
+                let mve_piece = match mve.piece {
+                    Some(p) => p,
+                    None => panic!("no piece on castle move"),
+                };
+
+                self.board[mve.to[1] as usize ][mve.to[0] as usize] = None;
+
+                for (y, color) in vec![(0, Color::White), (7, Color::Black)] {
+                    if mve_piece == (Piece { piece_type: PieceType::King, color: color }) {
+                        self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: color});
+                        self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: color});
+                    } else if mve_piece == (Piece { piece_type: PieceType::Queen, color: color }) {
+                        self.board[y][1] = Some(Piece { piece_type: PieceType::King, color: color});
+                        self.board[y][2] = Some(Piece { piece_type: PieceType::Rook, color: color});
+                    }
+                }
+
+                self.castle.remove(self.castle.iter().position(|x| *x == mve_piece).unwrap());
+            },
             MoveType::EnPassant => {},
         }
 
@@ -215,9 +271,9 @@ impl Game {
                     Some(p) => if color == p.color {
                         // sort so that pawns will get checked last
                         match p.piece_type {
-                            PieceType::Pawn => { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self.board)) },
+                            PieceType::Pawn => { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self)) },
                             _ => {
-                                for mve in p.get_all_moves(x as i8, y as i8, &self.board) {
+                                for mve in p.get_all_moves(x as i8, y as i8, &self) {
                                     all_moves.insert(0, mve);
                                 }
                             }
@@ -256,7 +312,7 @@ impl Game {
         if verbose { println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth); }
 
         for mve in all_moves.iter() {
-            let mut new_game = *self;
+            let mut new_game = self.clone();
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
@@ -273,6 +329,7 @@ impl Game {
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
+
             if verbose { print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result); }
             if result > highest_score {
                 // highest_backtrack = backtrack;
@@ -296,7 +353,7 @@ impl Game {
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
         for mve in all_moves.iter() {
             // generate new game from move
-            let mut new_game = *self;
+            let mut new_game = self.clone();
             new_game.do_move(&mve);
 
             // calculate the score of the game

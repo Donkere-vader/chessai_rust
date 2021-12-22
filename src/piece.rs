@@ -1,7 +1,9 @@
 use crate::consts::{ PieceType, Color, Move, MoveType };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
+use crate::game::{ Game };
 
-#[derive(Clone, Copy)]
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct Piece {
     pub piece_type: PieceType,
     pub color: Color
@@ -9,8 +11,8 @@ pub struct Piece {
 
 
 impl Piece {
-    pub fn get_all_moves(&self, x: i8, y: i8, board: &[[Option<Piece>; 8]; 8]) -> Vec<Move> {
-        fn walk_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
+    pub fn get_all_moves(&self, x: i8, y: i8, game: &Game) -> Vec<Move> {
+        fn walk_offsets(piece: &Piece, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
             let mut new_moves: Vec<Move> = Vec::new();
 
             let mut distance;
@@ -52,7 +54,8 @@ impl Piece {
 
             new_moves
         }
-        fn with_offsets(piece: &Piece, from: [i8; 2], board: &[[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
+
+        fn with_offsets(piece: &Piece, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
             let mut new_moves: Vec<Move> = Vec::new();
 
             for offset in offsets {
@@ -76,23 +79,46 @@ impl Piece {
         let mut moves: Vec<Move> = Vec::new();
         
         match self.piece_type {
-            PieceType::King => moves.extend(with_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false)),
-            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None, true)),
-            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None, true)),
-            PieceType::Knight => moves.extend(with_offsets(self, [x, y], board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
-            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
+            PieceType::King => {
+                // standard moves
+                moves.extend(with_offsets(self, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false));
+
+                // castle moves
+                for (y, color) in vec![(0, Color::White), (7, Color::Black)] {
+                    if self.color == color {
+                        let king = Piece { piece_type: PieceType::King, color: color};
+                        let queen = Piece { piece_type: PieceType::Queen, color: color};
+                        if game.castle.contains(&king) &&
+                            game.board[y][5].is_none() && game.board[y][6].is_none() {
+                                moves.push(Move { from: [x, y as i8], to: [7, y as i8], move_type: MoveType::Castle, piece: Some(king)});
+                        }
+                        if game.castle.contains(&queen) &&
+                            game.board[y][1].is_none() && game.board[y][2].is_none() && game.board[y][3].is_none() {
+                                moves.push(Move { from: [x, y as i8], to: [0, y as i8], move_type: MoveType::Castle, piece: Some(queen)});
+                        }
+                    }
+                }
+            },
+            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None, true)),
+            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None, true)),
+            PieceType::Knight => moves.extend(with_offsets(self, [x, y], game.board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
+            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
             PieceType::Pawn => {
-                moves.extend(with_offsets(self, [x, y], board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
-                if (self.color == Color::White && y == 6 && board[7][x as usize].is_none() ) || (self.color == Color::Black && y == 1 && board[0][x as usize].is_none()) {
+                // can take pieces?
+                moves.extend(with_offsets(self, [x, y], game.board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
+
+                if (self.color == Color::White && y == 6 && game.board[7][x as usize].is_none() ) || (self.color == Color::Black && y == 1 && game.board[0][x as usize].is_none()) {
+                    // promote
                     let to_y = if self.color == Color::White { 7 } else { 0 };
                     for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
                         moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: self.color }) } );
                     }
                 } else {
+                    // standard moves
                     moves.extend(walk_offsets(
                         self,
                         [x, y],
-                        board,
+                        game.board,
                         if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
                         if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
                         false,
@@ -117,7 +143,8 @@ impl Piece {
             "p" => PieceType::Pawn,
             "n" => PieceType::Knight,
             "r" => PieceType::Rook,
-            _ => PieceType::Bishop,
+            "b" => PieceType::Bishop,
+            _ => panic!("Invalid char `{}`", fen_letter),
         };
 
         Piece {

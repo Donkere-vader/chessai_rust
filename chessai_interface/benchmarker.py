@@ -22,7 +22,7 @@ class BenchMarker():
             print(f"[BENCHMARK {idx + 1}/{len(self.fen_codes)}]", key.ljust(30), end=" ")
             for i in range(self.runs):
                 start = dt.now()
-                best_move = chess_ai.get_best_move(self.fen_codes[key], 4, False)
+                _fen_string, best_move = chess_ai.get_best_move(self.fen_codes[key], 4, False)
                 elapsed = dt.now() - start
                 elapsed_micro = elapsed.microseconds + elapsed.seconds * 1_000_000
                 times.append(elapsed_micro)

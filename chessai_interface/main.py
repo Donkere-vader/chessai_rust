@@ -31,7 +31,7 @@ class GameWindow(tk.Tk):
         self.title("chess ai")
         self.boards_history = []
         self.board = [[None for _ in range(8)] for _ in range(8)]
-        self.board = loads(fen_code)
+        self.board, self.castling = loads(fen_code)
         if color in ["white", "black"]:
             self.color = color
         else:
@@ -77,10 +77,8 @@ class GameWindow(tk.Tk):
         self.boards_history.append(deepcopy(self.board))
         self.board[to[1]][to[0]] = piece
         self.board[frm[1]][frm[0]] = None
-        self.recent_move = [tuple(to), tuple(frm)]
         self.log.append({
-            "move": {"from": frm, "to": to},
-            "fen_code": dumps(self.board, self.color),
+            "fen_code": dumps(self.board, self.color, self.castling),
         })
         self.write_log()
         self.draw()
@@ -169,10 +167,11 @@ class GameWindow(tk.Tk):
 
     def ai_move(self):
         start = dt.now()
-        best_move = chess_ai.get_best_move(dumps(self.board, self.color), self.depth, True)
+        fen_string, move = chess_ai.get_best_move(dumps(self.board, self.color, self.castling), self.depth, True)
+        self.board, self.castling = loads(fen_string)
         elapsed = dt.now() - start
         print(f"Calculation time: {elapsed}")
-        self.move(best_move['from'], best_move['to'])
+        self.draw()
 
     def draw(self):
         for y, button_row in enumerate(reversed(self.tile_buttons) if self.viewing_side == "black" else self.tile_buttons):

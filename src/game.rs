@@ -246,7 +246,8 @@ impl Game {
         total
     }
 
-    pub fn get_best_move(&self, depth: u8, verbose: bool) -> Move {
+    pub fn get_best_move(&self, mut depth: u8, verbose: bool) -> Move {
+        depth -= 1;
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();

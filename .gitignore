@@ -3,6 +3,9 @@ __pycache__
 .env
 logs/
 
+# project
+benchmarks.json
+
 # personal
 /dog.yaml
 /dog

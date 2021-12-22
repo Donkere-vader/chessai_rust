@@ -240,13 +240,13 @@ impl Game {
         total
     }
 
-    pub fn get_best_move(&self, depth: u8) -> Move {
+    pub fn get_best_move(&self, depth: u8, verbose: bool) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut threads: Vec<thread::JoinHandle<f64>> = Vec::new();
 
         let n_pieces = self.get_number_of_pieces();
-        println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth);
+        if verbose { println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth); }
 
         for mve in all_moves.iter() {
             let mut new_game = *self;
@@ -266,20 +266,20 @@ impl Game {
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
-            print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result);
+            if verbose { print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result); }
             if result > highest_score {
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
                 highest_score = result;
-                print!("Best found yet");
+                if verbose { print!("Best found yet"); }
             }
-            println!();
+            if verbose { println!(); }
 
             idx += 1;
         }
 
 
-        println!("Best move: {}", best_move.repr());
+        if verbose { println!("Best move: {}", best_move.repr()); }
         best_move
     }
 

@@ -1,5 +1,6 @@
 {
     "start_code": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
     "mate_in_2_rooks": "7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1",
-    "promote_for_black": "k7/8/8/8/8/8/7p/K7 w KQkq - 0 1"
+    "promote_for_black": "k7/8/8/8/8/8/7p/K7 w KQkq - 0 1",
+    "game_against_sero_chess": "r2qkbnr/2pNpppp/p1Q5/8/3p2b1/2P5/PP1PPP1P/RNB1KB1R w KQkq - 0 9"
 }

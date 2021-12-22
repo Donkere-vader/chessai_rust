@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from chessai_interface import GameWindow
+from chessai_interface.benchmarker import BenchMarker
 
 
 parser = ArgumentParser(
@@ -40,8 +41,24 @@ gui_parser.add_argument(
     help="The color that the AI will play as"
 )
 
+bench_parser.add_argument(
+    "benchmark_name",
+    type=str,
+    help="Name for the benchmark"
+)
+
+bench_parser.add_argument(
+    "--runs",
+    type=int,
+    default=10,
+    help="Amount of runs to do to get an average"
+)
+
 args = parser.parse_args()
 
 if args.command == "gui":
     root = GameWindow(args.fen_code, args.log_file_name, args.color)
     root.mainloop()
+elif args.command == "benchmark":
+    bencher = BenchMarker(args.benchmark_name, args.runs)
+    bencher.run()

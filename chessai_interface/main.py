@@ -169,7 +169,7 @@ class GameWindow(tk.Tk):
 
     def ai_move(self):
         start = dt.now()
-        best_move = chess_ai.get_best_move(dumps(self.board, self.color), self.depth)
+        best_move = chess_ai.get_best_move(dumps(self.board, self.color), self.depth, True)
         elapsed = dt.now() - start
         print(f"Calculation time: {elapsed}")
         self.move(best_move['from'], best_move['to'])

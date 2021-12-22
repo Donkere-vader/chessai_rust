@@ -95,7 +95,6 @@ impl Game {
         let mut castling_string = String::new();
         if self.castle.len() > 0 {
             for piece in self.castle.iter() {
-                println!("{}", piece.repr());
                 castling_string += &piece.to_fen();
             }
         } else {

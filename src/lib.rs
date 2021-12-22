@@ -9,7 +9,6 @@ use game::{ Game };
 
 #[pyfunction]
 fn get_best_move(fen_code: String, depth: u8, verbose: bool) -> (String, HashMap<String, [i8; 2]>) {
-    println!("RECIEVED FEN_CODE: {}", fen_code);
     let mut game = Game::from_fen(fen_code);
     let best_move = game.get_best_move(depth, verbose);
     let mut map: HashMap<String, [i8; 2]> = HashMap::new();
@@ -17,9 +16,6 @@ fn get_best_move(fen_code: String, depth: u8, verbose: bool) -> (String, HashMap
     map.insert(String::from("to"), best_move.to);
 
     game.do_move(&best_move);
-
-    println!("SENT FEN_CODE: {}", game.to_fen());
-
 
     (game.to_fen(), map)
 }

@@ -1,4 +1,4 @@
-use crate::consts::{ PieceType, Color, Move };
+use crate::consts::{ PieceType, Color, Move, MoveType };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 
 #[derive(Clone, Copy)]
@@ -30,11 +30,11 @@ impl Piece {
                     match &board[current_coord[1] as usize][current_coord[0] as usize] {
                         Some(p) => {
                             if p.color != piece.color && take {
-                                new_moves.push( Move { from: *&from, to: *&current_coord } );
+                                new_moves.push( Move::simple_new(*&from, *&current_coord) );
                             }
                             break;
                         },
-                        None => new_moves.push( Move { from: *&from, to: *&current_coord } ),
+                        None => new_moves.push( Move::simple_new(*&from, *&current_coord) ),
                     }
 
                     // Chech if max_distance is not yet reached
@@ -65,8 +65,8 @@ impl Piece {
 
                 // Check if tile is empty or takable
                 match &board[new_coord[1] as usize][new_coord[0] as usize] {
-                    Some(p) => if p.color != piece.color { new_moves.push( Move { from: *&from, to: *&new_coord } ); },
-                    None => if !has_to_take { new_moves.push( Move { from: *&from, to: *&new_coord } ) },
+                    Some(p) => if p.color != piece.color { new_moves.push( Move::simple_new(*&from, *&new_coord) ); },
+                    None => if !has_to_take { new_moves.push( Move::simple_new(*&from, *&new_coord) ) },
                 }
             }
 
@@ -83,14 +83,21 @@ impl Piece {
             PieceType::Rook => moves.extend(walk_offsets(self, [x, y], board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
             PieceType::Pawn => {
                 moves.extend(with_offsets(self, [x, y], board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
-                moves.extend(walk_offsets(
-                    self,
-                    [x, y],
-                    board,
-                    if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
-                    if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
-                    false,
-                ));
+                if (self.color == Color::White && y == 6 && board[7][x as usize].is_none() ) || (self.color == Color::Black && y == 1 && board[0][x as usize].is_none()) {
+                    let to_y = if self.color == Color::White { 7 } else { 0 };
+                    for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
+                        moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: self.color }) } );
+                    }
+                } else {
+                    moves.extend(walk_offsets(
+                        self,
+                        [x, y],
+                        board,
+                        if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
+                        if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
+                        false,
+                    ));
+                }
             },
         }
         moves

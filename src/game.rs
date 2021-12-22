@@ -1,6 +1,6 @@
 use colored::*;
 use crate::piece::{ Piece };
-use crate::consts::{ Color, Move, PieceType };
+use crate::consts::{ Color, Move, PieceType, MoveType };
 use std::thread;
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
@@ -145,22 +145,18 @@ impl Game {
     }
 
     pub fn do_move(&mut self, mve: &Move) {
-        let mut done = false;
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
-        match piece {
-            Some(p) => {
-                if p.piece_type == PieceType::Pawn && (mve.to[1] == 0 || mve.to[1] == 7) {
-                    self.board[mve.to[1] as usize ][mve.to[0] as usize] = Some(Piece { piece_type: PieceType::Queen, color: p.color });
-                    self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
-                    done = true;
-                }
-            },
-            None => {},
-        }
+        self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
-        if !done {
-            self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
-            self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;    
+        match mve.move_type {
+            MoveType::Standard => {
+                self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
+            },
+            MoveType::Promote => {
+                self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve.piece;
+            },
+            MoveType::Castle => {},
+            MoveType::EnPassant => {},
         }
 
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };

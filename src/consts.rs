@@ -45,8 +45,29 @@ impl Move {
 
     #[allow(dead_code)]
     pub fn repr(&self) -> String {
-        let from = format!("{}{}", (self.from[0] + 97) as u8 as char, self.from[1] + 1);
-        let to = format!("{}{}", (self.to[0] + 97) as u8 as char, self.to[1] + 1);
-        format!("<Move ({} -> {})>", from, to)
+        match self.move_type {
+            MoveType::Castle => {
+                let notation = match self.piece {
+                    Some(p) => {
+                        let notation = match p.piece_type {
+                            PieceType::Queen => { String::from("o-o-o") },
+                            PieceType::King => { String::from("o-o") }
+                            _ => panic!("Invalid peice on castle move"),
+                        };
+                        match p.color {
+                            Color::White => { notation.to_ascii_uppercase() },
+                            Color::Black => { notation },
+                        }
+                    },
+                    None => panic!("No piece on castle move"),
+                };
+                format!("<Move {}>", notation)
+            },
+            _ => {
+                let from = format!("{}{}", (self.from[0] + 97) as u8 as char, self.from[1] + 1);
+                let to = format!("{}{}", (self.to[0] + 97) as u8 as char, self.to[1] + 1);
+                format!("<Move ({} -> {})>", from, to)
+            },
+        }
     }
 }

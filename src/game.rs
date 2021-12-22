@@ -216,7 +216,17 @@ impl Game {
         for (y, rank) in (&self.board).iter().enumerate() {
             for (x, piece) in rank.iter().enumerate() {
                 match piece {
-                    Some(p) => if color == p.color { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self.board)) },
+                    Some(p) => if color == p.color {
+                        // sort so that pawns will get checked last
+                        match p.piece_type {
+                            PieceType::Pawn => { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self.board)) },
+                            _ => {
+                                for mve in p.get_all_moves(x as i8, y as i8, &self.board) {
+                                    all_moves.insert(0, mve);
+                                }
+                            }
+                        }
+                    },
                     None => {},
                 }
             }
@@ -253,7 +263,7 @@ impl Game {
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 1, depth) * -1.0;
+                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1.0;
                     game_score
                 })
             );
@@ -283,7 +293,7 @@ impl Game {
         best_move
     }
 
-    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8) -> f64 {
+    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: f64) -> f64 {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut highest_score: f64 = -CHECK_MATE_SCORE;
@@ -299,7 +309,7 @@ impl Game {
                 return CHECK_MATE_SCORE * -1.0;
             }
             if depth != 0 {
-                game_score = new_game.private_get_best_move(depth - 1, maximum_depth) * -1.0;
+                game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1.0) * -1.0;
             }
 
             // check if this is the best peforming one
@@ -310,6 +320,11 @@ impl Game {
             }
             if game_score > highest_score {
                 highest_score = game_score;
+            }
+
+            // ab-pruning
+            if highest_score > score_to_beat {
+                return highest_score;
             }
         }
 

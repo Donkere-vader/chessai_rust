@@ -29,12 +29,15 @@ class BenchMarker():
                 print(i + 1, end=" ")
             print()
             bench_data['runs'] = self.runs
-            bench_data['results'][key] = sum(times) / len(times)
+            bench_data['results'][key] = {
+                "time": sum(times) / len(times),
+                "best_move": f"<Move {best_move['from']} -> {best_move['to']}>",
+            }
 
         print()
         print("[ === DATA === ]")
         for key in bench_data['results']:
-            print(key.ljust(20), bench_data['results'].get(key))
+            print(key.ljust(30), str(bench_data['results'][key]['time']).ljust(10), bench_data['results'][key]['best_move'])
         
         if os.path.exists("benchmarks.json"):
             with open("benchmarks.json", "r") as f:

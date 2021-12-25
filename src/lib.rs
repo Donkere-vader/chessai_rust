@@ -17,17 +17,6 @@ fn get_best_move(fen_code: String, depth: u8, verbose: bool) -> (String, HashMap
     map.insert(String::from("from"), best_move.from);
     map.insert(String::from("to"), best_move.to);
 
-    for y in 0..8i8 {
-        for x in 0..8i8 {
-            if game.square_is_attacked([x, y], Color::White) {
-                print!("1");
-            } else {
-                print!("0");
-            }
-        }
-        println!();
-    }
-
     game.do_move(&best_move);
 
     (game.to_fen(), map)

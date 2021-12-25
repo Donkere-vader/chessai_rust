@@ -74,7 +74,7 @@ class GameWindow(tk.Tk):
         piece = self.board[frm[1]][frm[0]]
         if piece[1] == 'pawn' and to[1] in [0, 7]:
             piece = (piece[0], 'queen')
-        self.boards_history.append(deepcopy(self.board))
+        self.boards_history.append(dumps(self.board, self.color, self.castling))
         self.board[to[1]][to[0]] = piece
         self.board[frm[1]][frm[0]] = None
         self.log.append({
@@ -94,7 +94,7 @@ class GameWindow(tk.Tk):
 
     def undo(self):
         if len(self.boards_history) > 0:
-            self.board = self.boards_history.pop(len(self.boards_history) - 1)
+            self.board, self.castling = loads(self.boards_history.pop(len(self.boards_history) - 1))
             del self.log[-1]
         self.draw()
 
@@ -139,18 +139,27 @@ class GameWindow(tk.Tk):
         )
         undo_button.pack(side=TOP)
 
-        self.depth_buttons = []
-        self.frames['depth_buttons'] = tk.Frame(self.frames['side_bar'])
-        for depth in range(1, 8):
-            self.depth_buttons.append(
-                tk.Button(
-                    self.frames['depth_buttons'],
-                    text=str(depth),
-                    command=lambda d=depth: self.set_depth(d)
-                )
-            )
-            self.depth_buttons[-1].pack(side=LEFT)
-        self.frames['depth_buttons'].pack(side=TOP)
+        self.frames['depth'] = tk.Frame(self.frames['side_bar'])
+        down_button = tk.Button(
+            self.frames['depth'],
+            text="\/",
+            command= lambda: self.update_depth(-1),
+        )
+        down_button.pack(side=LEFT)
+        self.depth_label = tk.Label(
+            self.frames['depth'],
+            width=3,
+            font=('arial', 25),
+            text=self.depth
+        )
+        self.depth_label.pack(side=LEFT)
+        up_button = tk.Button(
+            self.frames['depth'],
+            text="/\\",
+            command= lambda: self.update_depth(1),
+        )
+        up_button.pack(side=LEFT)
+        self.frames['depth'].pack(side=TOP)
 
         switch_viewing_side_button = tk.Button(
             self.frames['side_bar'],
@@ -161,13 +170,18 @@ class GameWindow(tk.Tk):
 
         self.frames['side_bar'].grid(row=0, column=1)
 
-    def set_depth(self, depth):
-        self.depth = depth
+    def update_depth(self, depth):
+        self.depth = max(self.depth + depth, 2)
         self.draw()
 
     def ai_move(self):
         start = dt.now()
+        self.boards_history.append(dumps(self.board, self.color, self.castling))
         fen_string, move = chess_ai.get_best_move(dumps(self.board, self.color, self.castling), self.depth, True)
+        self.log.append({
+            "fen_string": fen_string,
+        })
+        self.write_log()
         self.board, self.castling = loads(fen_string)
         elapsed = dt.now() - start
         print(f"Calculation time: {elapsed}")
@@ -192,8 +206,4 @@ class GameWindow(tk.Tk):
                     command= lambda y=y, x=x: self.click((x, y)),
                 )
         
-        for idx, button in enumerate(self.depth_buttons):
-            if self.depth == idx + 1:
-                button.config(bg="red", fg="white")
-            else:
-                button.config(bg="lightgrey", fg="black")
+        self.depth_label.config(text=self.depth)

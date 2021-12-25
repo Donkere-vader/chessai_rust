@@ -91,11 +91,11 @@ impl Piece {
                         let queen = Piece { piece_type: PieceType::Queen, color: color};
                         if game.castle.contains(&king) &&
                             game.board[y][5].is_none() && game.board[y][6].is_none() {
-                                moves.push(Move { from: [x, y as i8], to: [7, y as i8], move_type: MoveType::Castle, piece: Some(king)});
+                                moves.push(Move { from: [x, y as i8], to: [7, y as i8], piece: Some(king)});
                         }
                         if game.castle.contains(&queen) &&
                             game.board[y][1].is_none() && game.board[y][2].is_none() && game.board[y][3].is_none() {
-                                moves.push(Move { from: [x, y as i8], to: [0, y as i8], move_type: MoveType::Castle, piece: Some(queen)});
+                                moves.push(Move { from: [x, y as i8], to: [0, y as i8], piece: Some(queen)});
                         }
                     }
                 }
@@ -112,7 +112,7 @@ impl Piece {
                     // promote
                     let to_y = if self.color == Color::White { 7 } else { 0 };
                     for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
-                        moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: self.color }) } );
+                        moves.push(Move { from: [x, y], to: [x, to_y], piece: Some(Piece { piece_type: piece_type, color: self.color }) } );
                     }
                 } else {
                     // standard moves

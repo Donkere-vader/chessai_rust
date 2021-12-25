@@ -4,6 +4,7 @@ use std::sync::mpsc::{ Receiver, self };
 use consts::{ Command };
 use logger::{ Logger, LogType };
 use game::{ Game };
+use move_struct::{ Move };
 
 mod consts;
 mod game;
@@ -64,6 +65,16 @@ fn main() {
             fen_string = splitted_buffer[1].to_string();
             if fen_string == "startpos" {
                 fen_string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string();
+            }
+
+            let mut move_strings = Vec::new();
+            let mut looking_at_move = false;
+            for item in splitted_buffer.iter() {
+                if looking_at_move {
+                    move_strings.push(Move::from_long_algebraic_notatoin(String::from(*item)));
+                } else if *item == "moves" {
+                    looking_at_move = true
+                }
             }
         } else if command == "go" {
             sender.send((

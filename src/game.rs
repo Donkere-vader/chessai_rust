@@ -167,7 +167,7 @@ impl Game {
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
-        match mve.move_type {
+        match mve.get_move_type() {
             MoveType::Standard => {
                 // check for disable castle
                 for p in vec![piece, self.board[mve.to[1] as usize ][mve.to[0] as usize]] {
@@ -330,7 +330,7 @@ impl Game {
         let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
-
+            println!("info depth 5 score cp {}", result);
             if verbose { print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result); }
             if result > highest_score {
                 // highest_backtrack = backtrack;

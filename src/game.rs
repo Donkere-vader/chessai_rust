@@ -204,8 +204,8 @@ impl Game {
                         self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: color});
                         self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: color});
                     } else if mve_piece == (Piece { piece_type: PieceType::Queen, color: color }) {
-                        self.board[y][1] = Some(Piece { piece_type: PieceType::King, color: color});
-                        self.board[y][2] = Some(Piece { piece_type: PieceType::Rook, color: color});
+                        self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: color});
+                        self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: color});
                     }
                 }
 

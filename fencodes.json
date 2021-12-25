@@ -3,5 +3,5 @@
     "mate_in_2_rooks": "7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1",
     "promote_for_black": "8/1k6/8/8/8/8/7p/K7 w KQkq - 0 1",
     "game_against_sero_chess": "r2qkbnr/2pNpppp/p1Q5/8/3p2b1/2P5/PP1PPP1P/RNB1KB1R w KQkq - 0 9",
-    "castle_white": "4k2r/8/8/8/8/8/8/5K2 b k - 0 1"
+    "castle_black": "4k2r/8/8/8/8/8/8/4KR2 b k - 0 1"
 }

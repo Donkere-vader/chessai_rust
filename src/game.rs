@@ -1,6 +1,7 @@
 use colored::*;
-use crate::piece::{ Piece };
+use crate::piece::{ Piece, get_all_piece_moves };
 use crate::consts::{ Color, Move, PieceType, MoveType };
+use crate::utils::{ with_offsets };
 use std::thread;
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
@@ -284,6 +285,29 @@ impl Game {
         }
 
         all_moves
+    }
+
+    pub fn square_is_attacked(&self, square: [i8; 2], color: Color) -> bool {
+        let other_color = if color == Color::White { Color::Black } else { Color::White };
+        for piece_type in vec![PieceType::Knight, PieceType::Rook, PieceType::Bishop, PieceType::Pawn, PieceType::Queen] {
+            for mve in get_all_piece_moves(piece_type, other_color, square[0], square[1], &self).iter() {
+                let is_attacked = match self.board[mve.to[1] as usize][mve.to[0] as usize] {
+                    Some(p) => { if p.piece_type == piece_type { true } else { false }},
+                    None => false,
+                };
+                if is_attacked { return true };
+            }
+        }
+
+        for mve in with_offsets(&Color::White, square, self.board, vec![[-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]], true).iter() {
+            let is_attacked = match self.board[mve.to[1] as usize][mve.to[0] as usize] {
+                Some(p) => { if p.piece_type == PieceType::King { true } else { false }},
+                None => false,
+            };
+            if is_attacked { return true };
+        }
+
+        false
     }
 
     pub fn get_number_of_pieces(&self) -> u8 {

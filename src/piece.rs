@@ -1,6 +1,7 @@
 use crate::consts::{ PieceType, Color, Move, MoveType };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 use crate::game::{ Game };
+use crate::utils::{ with_offsets, walk_offsets };
 
 
 #[derive(Clone, Copy, PartialEq)]
@@ -12,121 +13,7 @@ pub struct Piece {
 
 impl Piece {
     pub fn get_all_moves(&self, x: i8, y: i8, game: &Game) -> Vec<Move> {
-        fn walk_offsets(piece: &Piece, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
-            let mut new_moves: Vec<Move> = Vec::new();
-
-            let mut distance;
-            for offset in offsets {
-                distance = 0;
-                let mut current_coord = *&from;
-                loop {
-                    current_coord[0] += offset[0];
-                    current_coord[1] += offset[1];
-
-                    // Check if current_coord exists
-                    if !(0 <= current_coord[0] && current_coord[0] <= 7) || !(0 <= current_coord[1] && current_coord[1] <= 7) {
-                        break;
-                    }
-
-                    // Chech if tile is empty or takable
-                    match &board[current_coord[1] as usize][current_coord[0] as usize] {
-                        Some(p) => {
-                            if p.color != piece.color && take {
-                                new_moves.push( Move::simple_new(*&from, *&current_coord) );
-                            }
-                            break;
-                        },
-                        None => new_moves.push( Move::simple_new(*&from, *&current_coord) ),
-                    }
-
-                    // Chech if max_distance is not yet reached
-                    distance += 1;
-                    match max_distance {
-                        Some(mx_d) => {
-                            if distance == mx_d {
-                                break;
-                            }
-                        }
-                        _ => {},
-                    }
-                }
-            }
-
-            new_moves
-        }
-
-        fn with_offsets(piece: &Piece, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
-            let mut new_moves: Vec<Move> = Vec::new();
-
-            for offset in offsets {
-                let new_coord = [from[0] + offset[0], from[1] + offset[1]];
-
-                // Check if new_coord exists
-                if !(0 <= new_coord[0] && new_coord[0] <= 7) || !(0 <= new_coord[1] && new_coord[1] <= 7) {
-                    continue;
-                }
-
-                // Check if tile is empty or takable
-                match &board[new_coord[1] as usize][new_coord[0] as usize] {
-                    Some(p) => if p.color != piece.color { new_moves.push( Move::simple_new(*&from, *&new_coord) ); },
-                    None => if !has_to_take { new_moves.push( Move::simple_new(*&from, *&new_coord) ) },
-                }
-            }
-
-            new_moves
-        }
-
-        let mut moves: Vec<Move> = Vec::new();
-        
-        match self.piece_type {
-            PieceType::King => {
-                // standard moves
-                moves.extend(with_offsets(self, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false));
-
-                // castle moves
-                for (y, color) in vec![(0, Color::White), (7, Color::Black)] {
-                    if self.color == color {
-                        let king = Piece { piece_type: PieceType::King, color: color};
-                        let queen = Piece { piece_type: PieceType::Queen, color: color};
-                        if game.castle.contains(&king) &&
-                            game.board[y][5].is_none() && game.board[y][6].is_none() {
-                                moves.push(Move { from: [x, y as i8], to: [7, y as i8], move_type: MoveType::Castle, piece: Some(king)});
-                        }
-                        if game.castle.contains(&queen) &&
-                            game.board[y][1].is_none() && game.board[y][2].is_none() && game.board[y][3].is_none() {
-                                moves.push(Move { from: [x, y as i8], to: [0, y as i8], move_type: MoveType::Castle, piece: Some(queen)});
-                        }
-                    }
-                }
-            },
-            PieceType::Queen => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None, true)),
-            PieceType::Bishop => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None, true)),
-            PieceType::Knight => moves.extend(with_offsets(self, [x, y], game.board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
-            PieceType::Rook => moves.extend(walk_offsets(self, [x, y], game.board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
-            PieceType::Pawn => {
-                // can take pieces?
-                moves.extend(with_offsets(self, [x, y], game.board, if self.color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
-
-                if (self.color == Color::White && y == 6 && game.board[7][x as usize].is_none() ) || (self.color == Color::Black && y == 1 && game.board[0][x as usize].is_none()) {
-                    // promote
-                    let to_y = if self.color == Color::White { 7 } else { 0 };
-                    for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
-                        moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: self.color }) } );
-                    }
-                } else {
-                    // standard moves
-                    moves.extend(walk_offsets(
-                        self,
-                        [x, y],
-                        game.board,
-                        if self.color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
-                        if (self.color == Color::White && y == 1) || (self.color == Color::Black && y == 6) { Some(2) } else { Some(1) },
-                        false,
-                    ));
-                }
-            },
-        }
-        moves
+        get_all_piece_moves(self.piece_type, self.color, x, y, game)
     }
 
     pub fn from_fen(fen_letter: char) -> Piece {
@@ -199,4 +86,60 @@ impl Piece {
     pub fn repr(&self) -> String {
         format!("<Piece {:?} {:?}>", self.piece_type, self.color)
     }
+}
+
+
+pub fn get_all_piece_moves(piece_type: PieceType, color: Color, x: i8, y: i8, game: &Game) -> Vec<Move> {
+    let mut moves: Vec<Move> = Vec::new();
+    
+    match piece_type {
+        PieceType::King => {
+            // standard moves
+            moves.extend(with_offsets(&color, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], false));
+
+            // castle moves
+            if !game.square_is_attacked([x, y], if color == Color::White { Color::Black } else { Color::White }) {
+                let y = if color == Color::White { 0 } else { 7 };
+                let other_color = if color == Color::White { Color::Black } else { Color::Black };
+                let king = Piece { piece_type: PieceType::King, color: color};
+                let queen = Piece { piece_type: PieceType::Queen, color: color};
+                if game.castle.contains(&king) &&
+                    game.board[y][5].is_none() && !game.square_is_attacked([5, y as i8], other_color) && game.board[y][6].is_none() && !game.square_is_attacked([6, y as i8], other_color) {
+                        moves.push(Move { from: [x, y as i8], to: [7, y as i8], move_type: MoveType::Castle, piece: Some(king)});
+                }
+                if game.castle.contains(&queen) &&
+                    game.board[y][1].is_none() && game.board[y][2].is_none() && !game.square_is_attacked([2, y as i8], other_color) && game.board[y][3].is_none() && !game.square_is_attacked([3, y as i8], other_color) {
+                        moves.push(Move { from: [x, y as i8], to: [0, y as i8], move_type: MoveType::Castle, piece: Some(queen)});
+                }
+            }
+        },
+        PieceType::Queen => moves.extend(walk_offsets(&color, [x, y], game.board, vec![[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]], None, true)),
+        PieceType::Bishop => moves.extend(walk_offsets(&color, [x, y], game.board, vec![[1, 1], [-1, 1], [-1, -1], [1, -1]], None, true)),
+        PieceType::Knight => moves.extend(with_offsets(&color, [x, y], game.board, vec![[-1, 2], [1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1]], false)),
+        PieceType::Rook => moves.extend(walk_offsets(&color, [x, y], game.board, vec![[1, 0], [0, 1], [-1, 0], [0, -1]], None, true)),
+        PieceType::Pawn => {
+            // can take pieces?
+            moves.extend(with_offsets(&color, [x, y], game.board, if color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] }, true));
+
+            if (color == Color::White && y == 6 && game.board[7][x as usize].is_none() ) || (color == Color::Black && y == 1 && game.board[0][x as usize].is_none()) {
+                // promote
+                let to_y = if color == Color::White { 7 } else { 0 };
+                for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
+                    moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: color }) } );
+                }
+            } else {
+                // standard moves
+                moves.extend(walk_offsets(
+                    &color,
+                    [x, y],
+                    game.board,
+                    if color == Color::White { vec![[0, 1]] } else { vec![[0, -1]] },
+                    if (color == Color::White && y == 1) || (color == Color::Black && y == 6) { Some(2) } else { Some(1) },
+                    false,
+                ));
+            }
+        },
+    }
+
+    moves
 }

@@ -7,6 +7,7 @@ from copy import deepcopy
 import json
 from datetime import datetime as dt
 import os
+from typing import List, Tuple
 
 
 UNICODE_CHESS_PIECES = {
@@ -39,7 +40,6 @@ class GameWindow(tk.Tk):
         self.depth = 4
         self.viewing_side = self.color
         self.selected_tile = None
-        self.recent_move = []
         self.log = []
 
         if log_file_name is None:
@@ -69,6 +69,19 @@ class GameWindow(tk.Tk):
             self.move(self.selected_tile, coord)
             reset_selected_tile()
             self.draw()
+
+    def get_highlights(self) -> List[Tuple[int, int]]:
+        if len(self.boards_history) == 0: return []
+        highligths = []
+
+        old_board, _old_castling = loads(self.boards_history[-1])
+
+        for y in range(8):
+            for x in range(8):
+                if old_board[y][x] != self.board[y][x]:
+                    highligths.append((x, y))
+
+        return highligths
 
     def move(self, frm, to):
         piece = self.board[frm[1]][frm[0]]
@@ -188,11 +201,13 @@ class GameWindow(tk.Tk):
         self.draw()
 
     def draw(self):
+        highlights = self.get_highlights()
+
         for y, button_row in enumerate(reversed(self.tile_buttons) if self.viewing_side == "black" else self.tile_buttons):
             for x, button in enumerate(reversed(button_row) if self.viewing_side == "black" else button_row):
                 tile = self.board[y][x]
                 bg = "#f0d9b5" if (x + y) % 2 == 1 else "#b58863" 
-                if (x, y) in self.recent_move:
+                if (x, y) in highlights:
                     bg = "#c4e580"
                 if (x, y) == self.selected_tile:
                     bg = "yellow"

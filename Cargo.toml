@@ -2,14 +2,8 @@
 name = "chess_ai"
 version = "1.2.1"
 edition = "2018"
-
-[lib]
-name = "chess_ai"
-crate-type = ["cdylib"]
+authors = ["donkere-vader"]
 
 [dependencies]
 colored = "2.0.0"
-
-[dependencies.pyo3]
-version = "0.15.1"
-features = ["extension-module"]
+chrono = "0.4"

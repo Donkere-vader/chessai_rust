@@ -1,7 +1,9 @@
 use colored::*;
 use crate::piece::{ Piece };
-use crate::consts::{ Color, Move, PieceType, MoveType };
+use crate::consts::{ Color, PieceType, MoveType };
+use crate::move_struct::{ Move };
 use std::thread;
+
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
 

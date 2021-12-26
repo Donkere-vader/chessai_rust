@@ -1,16 +1,21 @@
-use colored::*;
 use crate::piece::{ Piece, get_all_piece_moves };
-use crate::consts::{ Color, Move, PieceType, MoveType };
+use crate::consts::{ Color, PieceType, MoveType };
+use crate::move_struct::{ Move };
 use crate::utils::{ with_offsets };
+use colored::*;
+use std::time::{ Instant };
 use std::thread;
 
+
 const CHECK_MATE_SCORE: i64 = i64::MAX;
+
 
 #[derive(Clone)]
 pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
     pub castle: Vec<Piece>,
+    pub moves: Vec<Move>,
 }
 
 
@@ -56,6 +61,13 @@ impl Game {
             board: board,
             on_turn: on_turn,
             castle: castle_vec,
+            moves: Vec::new(),
+        }
+    }
+
+    pub fn apply_moves(&mut self, moves: &Vec<Move>) {
+        for mve in moves.iter() {
+            self.do_move(mve);
         }
     }
 
@@ -166,13 +178,14 @@ impl Game {
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
-        match mve.move_type {
+        let (mve_type, mve_piece) = mve.get_move_type(Some(self.castle.to_vec()));
+        match mve_type {
             MoveType::Standard => {
                 // check for disable castle
                 for p in vec![piece, self.board[mve.to[1] as usize ][mve.to[0] as usize]] {
                     match p {
                         Some(p2) => {
-                            if self.castle.contains(&p2) {
+                            if p2.piece_type == PieceType::King && self.castle.contains(&p2) {
                                 self.castle.remove(self.castle.iter().position(|x| *x == p2).unwrap());
                             } else {
                                 if p2.piece_type == PieceType::Rook {
@@ -193,21 +206,16 @@ impl Game {
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve.piece;
             },
             MoveType::Castle => {
-                let mve_piece = match mve.piece {
-                    Some(p) => p,
-                    None => panic!("no piece on castle move"),
-                };
-
-                self.board[mve.to[1] as usize ][mve.to[0] as usize] = None;
-
-                for (y, color) in vec![(0, Color::White), (7, Color::Black)] {
-                    if mve_piece == (Piece { piece_type: PieceType::King, color: color }) {
-                        self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: color});
-                        self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: color});
-                    } else if mve_piece == (Piece { piece_type: PieceType::Queen, color: color }) {
-                        self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: color});
-                        self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: color});
-                    }
+                let mve_piece = mve_piece.unwrap();
+                let y = mve.to[1] as usize;
+                if mve_piece.piece_type == PieceType::King {
+                    self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
+                    self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
+                    self.board[y][7] = None;
+                } else if mve_piece.piece_type == PieceType::Queen {
+                    self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
+                    self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
+                    self.board[y][0] = None;
                 }
 
                 self.castle.remove(self.castle.iter().position(|x| *x == mve_piece).unwrap());
@@ -310,36 +318,18 @@ impl Game {
         false
     }
 
-    pub fn get_number_of_pieces(&self) -> u8 {
-        let mut total = 0;
-
-        for y in 0..8 {
-            for x in 0..8 {
-                match self.board[y][x] {
-                    Some(_) => total += 1,
-                    None => {},
-                }
-            }
-        }
-
-        total
-    }
-
-    pub fn get_best_move(&self, mut depth: u8, verbose: bool) -> Move {
-        depth -= 1;
+    pub fn get_best_move(&self, depth: u8) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
-
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
 
-        let n_pieces = self.get_number_of_pieces();
-        if verbose { println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth); }
+        let now = Instant::now();
 
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1;
+                    let game_score = new_game.private_get_best_move(depth - 2, depth, CHECK_MATE_SCORE) * -1;
                     game_score
                 })
             );
@@ -349,24 +339,20 @@ impl Game {
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
 
         let mut idx = 0;
-        let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
 
-            if verbose { print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result); }
             if result > highest_score {
+                println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { result } else { result * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
                 highest_score = result;
-                if verbose { print!("Best found yet"); }
             }
-            if verbose { println!(); }
 
             idx += 1;
         }
 
-
-        if verbose { println!("Best move: {}", best_move.repr()); }
+        println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { highest_score } else { highest_score * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
         best_move
     }
 

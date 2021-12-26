@@ -1,4 +1,5 @@
-use crate::consts::{ Move, Color };
+use crate::move_struct::{ Move };
+use crate::consts::{ Color };
 use crate::piece::{ Piece };
 
 pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {

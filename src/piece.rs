@@ -1,7 +1,8 @@
-use crate::consts::{ PieceType, Color, Move, MoveType };
+use crate::consts::{ PieceType, Color };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 use crate::game::{ Game };
 use crate::utils::{ with_offsets, walk_offsets };
+use crate::move_struct::{ Move };
 
 
 #[derive(Clone, Copy, PartialEq)]
@@ -105,11 +106,11 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, x: i8, y: i8, ga
                 let queen = Piece { piece_type: PieceType::Queen, color: color};
                 if game.castle.contains(&king) &&
                     game.board[y][5].is_none() && !game.square_is_attacked([5, y as i8], other_color) && game.board[y][6].is_none() && !game.square_is_attacked([6, y as i8], other_color) {
-                        moves.push(Move { from: [x, y as i8], to: [7, y as i8], move_type: MoveType::Castle, piece: Some(king)});
+                        moves.push(Move { from: [x, y as i8], to: [7, y as i8], piece: Some(king)});
                 }
                 if game.castle.contains(&queen) &&
                     game.board[y][1].is_none() && game.board[y][2].is_none() && !game.square_is_attacked([2, y as i8], other_color) && game.board[y][3].is_none() && !game.square_is_attacked([3, y as i8], other_color) {
-                        moves.push(Move { from: [x, y as i8], to: [0, y as i8], move_type: MoveType::Castle, piece: Some(queen)});
+                        moves.push(Move { from: [x, y as i8], to: [0, y as i8], piece: Some(queen)});
                 }
             }
         },
@@ -125,7 +126,7 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, x: i8, y: i8, ga
                 // promote
                 let to_y = if color == Color::White { 7 } else { 0 };
                 for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
-                    moves.push(Move { from: [x, y], to: [x, to_y], move_type: MoveType::Promote, piece: Some(Piece { piece_type: piece_type, color: color }) } );
+                    moves.push(Move { from: [x, y], to: [x, to_y], piece: Some(Piece { piece_type: piece_type, color: color }) } );
                 }
             } else {
                 // standard moves

@@ -84,20 +84,6 @@ fn main() {
                     search_thread_sender = thread_communicators.0;
                     search_thread_receiver = thread_communicators.1;
 
-                    let mut board_string = String::new();
-
-                    for y in 0..8 {
-                        for x in 0..8 {
-                            match game_clone.board[7 - y][x] {
-                                Some(p) => board_string += &p.to_fen(),
-                                None => board_string += " ",
-                            }
-                        }
-                        board_string += "\n";
-                    }
-                    
-                    logger.log(LogType::Info, format!("Board:\n{}", board_string));
-
                     search_thread = Some(thread::spawn(move || {
                         let best_move = game_clone.get_best_move(6);
                         search_thread_sender.send(best_move).unwrap();

@@ -57,7 +57,7 @@ impl Move {
             if self.from[1] == 6 || self.from[1] == 1 {
                 return MoveType::Promote;
             } else {
-                return MoveType::EnPassant;
+                return MoveType::Castle;
             }
         };
 

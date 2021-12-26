@@ -1,7 +1,8 @@
-use colored::*;
 use crate::piece::{ Piece };
 use crate::consts::{ Color, PieceType, MoveType };
 use crate::move_struct::{ Move };
+use colored::*;
+use std::time::{ Instant };
 use std::thread;
 
 
@@ -297,36 +298,18 @@ impl Game {
         all_moves
     }
 
-    pub fn get_number_of_pieces(&self) -> u8 {
-        let mut total = 0;
-
-        for y in 0..8 {
-            for x in 0..8 {
-                match self.board[y][x] {
-                    Some(_) => total += 1,
-                    None => {},
-                }
-            }
-        }
-
-        total
-    }
-
-    pub fn get_best_move(&self, mut depth: u8, verbose: bool) -> Move {
-        depth -= 1;
+    pub fn get_best_move(&self, depth: u8) -> Move {
         let all_moves = self.get_all_moves(self.on_turn);
-
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
 
-        let n_pieces = self.get_number_of_pieces();
-        if verbose { println!("N Pieces: {}\nSearch depth: {}", n_pieces, depth); }
+        let now = Instant::now();
 
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1;
+                    let game_score = new_game.private_get_best_move(depth - 2, depth, CHECK_MATE_SCORE) * -1;
                     game_score
                 })
             );
@@ -336,24 +319,20 @@ impl Game {
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
 
         let mut idx = 0;
-        let threads_len = threads.len();
         for t in threads {
             let result = t.join().unwrap();
-            println!("info depth 5 score cp {}", result);
-            if verbose { print!("{: <5} {: <20} -> {: <20}", format!("{}/{}", idx + 1, threads_len), all_moves[idx].repr(), result); }
+
             if result > highest_score {
+                println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { result } else { result * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
                 // highest_backtrack = backtrack;
                 best_move = all_moves[idx];
                 highest_score = result;
-                if verbose { print!("Best found yet"); }
             }
-            if verbose { println!(); }
 
             idx += 1;
         }
 
-
-        if verbose { println!("Best move: {}", best_move.repr()); }
+        println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { highest_score } else { highest_score * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
         best_move
     }
 

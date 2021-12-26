@@ -5,6 +5,7 @@ use chrono::{ Utc };
 
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum LogType {
     Info,
     Warn,

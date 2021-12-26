@@ -16,14 +16,10 @@ pub enum Color {
 }
 
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 pub enum MoveType {
     Standard,
     Promote,
     Castle,
     EnPassant
-}
-
-#[derive(Debug)]
-pub enum Command {
-    Evaluate
 }

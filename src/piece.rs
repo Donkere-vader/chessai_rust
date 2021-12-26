@@ -1,4 +1,4 @@
-use crate::consts::{ PieceType, Color, MoveType };
+use crate::consts::{ PieceType, Color };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 use crate::game::{ Game };
 use crate::move_struct::{ Move };

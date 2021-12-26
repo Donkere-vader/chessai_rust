@@ -2,7 +2,6 @@ use std::io;
 use std::thread;
 use std::sync::mpsc::{ Receiver, self };
 use std::sync::mpsc::TryRecvError;
-use consts::{ Command };
 use logger::{ Logger, LogType };
 use game::{ Game };
 use move_struct::{ Move };
@@ -35,6 +34,7 @@ fn main() {
     let mut debug_mode = false;
 
     let mut search_thread: Option<thread::JoinHandle<()>> = None;
+    #[allow(unused_assignments)]
     let (mut search_thread_sender, mut search_thread_receiver) = mpsc::channel::<Move>();
     let mut game: Game = Game::from_fen(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
     let mut got_initial_position = false;
@@ -97,7 +97,7 @@ fn main() {
                     logger.log(LogType::Info, format!("Board:\n{}", board_string));
 
                     search_thread = Some(thread::spawn(move || {
-                        let best_move = game_clone.get_best_move(5, false);
+                        let best_move = game_clone.get_best_move(6);
                         search_thread_sender.send(best_move).unwrap();
                     }));
                 } else if command == "stop" {

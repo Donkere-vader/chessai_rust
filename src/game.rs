@@ -7,11 +7,13 @@ use std::thread;
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
 
+
 #[derive(Clone)]
 pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
     pub castle: Vec<Piece>,
+    pub moves: Vec<Move>,
 }
 
 
@@ -57,6 +59,13 @@ impl Game {
             board: board,
             on_turn: on_turn,
             castle: castle_vec,
+            moves: Vec::new(),
+        }
+    }
+
+    pub fn apply_moves(&mut self, moves: &Vec<Move>) {
+        for mve in moves.iter() {
+            self.do_move(mve);
         }
     }
 

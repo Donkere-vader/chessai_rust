@@ -20,8 +20,8 @@ impl Move {
 
     pub fn from_long_algebraic_notatoin(notation: String) -> Move {
         let notation = notation.chars().collect::<Vec<char>>();
-        let from_str = (notation[0], notation[1].to_digit(10).unwrap() as i8);
-        let to_str = (notation[2], notation[3].to_digit(10).unwrap() as i8);
+        let from_str = (notation[0], notation[1].to_digit(10).unwrap() as i8 - 1);
+        let to_str = (notation[2], notation[3].to_digit(10).unwrap() as i8 - 1);
 
         let from: [i8; 2] = [
             vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == from_str.0).unwrap() as i8,

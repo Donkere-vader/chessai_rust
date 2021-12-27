@@ -139,6 +139,16 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, x: i8, y: i8, ga
                     false,
                 ));
             }
+
+            // en passant
+            if game.en_passant_target_square.is_some() {
+                for offset in if color == Color::White { vec![[1, 1], [-1, 1]] } else { vec![[1, -1], [-1, -1]] } {
+                    let cord = [x + offset[0], y + offset[1]];
+                    if game.en_passant_target_square.unwrap() == cord {
+                        moves.push(Move::simple_new([x, y], cord));
+                    }
+                }
+            }
         },
     }
 

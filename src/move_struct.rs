@@ -52,7 +52,7 @@ impl Move {
         format!("<Move {}>", self.long_algebraic_notation())
     }
 
-    pub fn get_move_type(&self, castling: Option<Vec<Piece>>) -> (MoveType, Option<Piece>) {
+    pub fn get_move_type(&self, castling: Option<Vec<Piece>>, en_passant_target_square: Option<[i8; 2]>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
         if self.piece.is_some() {
             if self.from[1] == 6 || self.from[1] == 1 {
                 return (MoveType::Promote, self.piece);
@@ -71,6 +71,10 @@ impl Move {
             }
         }
 
+        if en_passant_target_square.is_some() && piece_type.is_some() && piece_type.unwrap() == PieceType::Pawn && en_passant_target_square.unwrap() == self.to {
+            return (MoveType::EnPassant, None);
+        }
+
         (MoveType::Standard, None)
     }
 
@@ -78,7 +82,7 @@ impl Move {
         let from = format!("{}{}", (self.from[0] + 97) as u8 as char, self.from[1] + 1);
         let to = format!("{}{}", (self.to[0] + 97) as u8 as char, self.to[1] + 1);
 
-        let promotion = match self.get_move_type(None).0 {
+        let promotion = match self.get_move_type(None, None, None).0 {
             MoveType::Promote => { 
                 match self.piece {
                     Some(p) => {

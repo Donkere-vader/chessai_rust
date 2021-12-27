@@ -15,6 +15,7 @@ pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
     pub castle: Vec<Piece>,
+    pub en_passant_target_square: Option<[i8; 2]>,
     pub moves: Vec<Move>,
 }
 
@@ -61,6 +62,7 @@ impl Game {
             board: board,
             on_turn: on_turn,
             castle: castle_vec,
+            en_passant_target_square: None,
             moves: Vec::new(),
         }
     }
@@ -175,32 +177,46 @@ impl Game {
     }
 
     pub fn do_move(&mut self, mve: &Move) {
-        let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize];
+        self.en_passant_target_square = None;
+        let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize].unwrap();
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
-        let (mve_type, mve_piece) = mve.get_move_type(Some(self.castle.to_vec()));
+        let (mve_type, mve_piece) = mve.get_move_type(Some(self.castle.to_vec()), self.en_passant_target_square, Some(piece.piece_type));
         match mve_type {
             MoveType::Standard => {
                 // check for disable castle
-                for p in vec![piece, self.board[mve.to[1] as usize ][mve.to[0] as usize]] {
-                    match p {
-                        Some(p2) => {
-                            if p2.piece_type == PieceType::King && self.castle.contains(&p2) {
-                                self.castle.remove(self.castle.iter().position(|x| *x == p2).unwrap());
-                            } else {
-                                if p2.piece_type == PieceType::Rook {
-                                    let to_remove_piece = Piece { piece_type: if mve.from[0] == 0 { PieceType::Queen } else { PieceType::King }, color: p2.color};
-                                    if self.castle.contains(&to_remove_piece) {
-                                        self.castle.remove(self.castle.iter().position(|x| *x == to_remove_piece).unwrap());
-                                    }
-                                }
+                let mut pieces_to_check = vec![piece];
+                match self.board[mve.to[1] as usize ][mve.to[0] as usize] {
+                    Some(p) => { pieces_to_check.push(p) },
+                    None => {},
+                };
+                for p in pieces_to_check {
+                    if p.piece_type == PieceType::King {
+                        if self.castle.contains(&p) {
+                            self.castle.remove(self.castle.iter().position(|x| *x == p).unwrap());
+                        }
+                        let queen = Piece { piece_type: PieceType::Queen, color: p.color };
+                        if self.castle.contains(&queen) {
+                            self.castle.remove(self.castle.iter().position(|x| *x == queen).unwrap());
+                        }
+                    } else {
+                        if p.piece_type == PieceType::Rook {
+                            let to_remove_piece = Piece { piece_type: if mve.from[0] == 0 { PieceType::Queen } else { PieceType::King }, color: p.color};
+                            if self.castle.contains(&to_remove_piece) {
+                                self.castle.remove(self.castle.iter().position(|x| *x == to_remove_piece).unwrap());
                             }
-                        },
-                        None => {},
-                    };
+                        }
+                    }
                 }
 
-                self.board[mve.to[1] as usize ][mve.to[0] as usize] = piece;
+                self.board[mve.to[1] as usize ][mve.to[0] as usize] = Some(piece);
+
+                if piece.piece_type == PieceType::Pawn {
+                    let delta = mve.from[1] - mve.to[1];
+                    if delta.abs() == 2 {
+                        self.en_passant_target_square = Some([mve.from[1] + (delta / 2), mve.to[0]]);
+                    }
+                }
             },
             MoveType::Promote => {
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve.piece;
@@ -220,7 +236,10 @@ impl Game {
 
                 self.castle.remove(self.castle.iter().position(|x| *x == mve_piece).unwrap());
             },
-            MoveType::EnPassant => {},
+            MoveType::EnPassant => {
+                self.board[mve.from[1] as usize][mve.to[0] as usize] = None;
+                self.board[mve.to[1] as usize][mve.to[0] as usize] = Some(piece);
+            },
         }
 
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };

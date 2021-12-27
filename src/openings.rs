@@ -78,7 +78,7 @@ impl OpeningsDatabase {
 
         if matching_openings.len() > 0 {
             let open_idx = rand::thread_rng().gen_range(0..matching_openings.len());
-            println!("Opening: {}", matching_openings[open_idx].name);
+            println!("Opening eco: {} name: {}", matching_openings[open_idx].eco, matching_openings[open_idx].name);
             return Some(matching_openings[open_idx].moves[moves.len()]);
         }
 

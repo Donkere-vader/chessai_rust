@@ -13,6 +13,7 @@ mod piece_scores;
 mod move_struct;
 mod logger;
 mod utils;
+mod openings;
 
 
 fn spawn_stdin_channel() -> Receiver<String> {
@@ -33,6 +34,7 @@ fn main() {
     let logger = Logger::new("log.log");
 
     let mut debug_mode = false;
+    let openings_database = openings::OpeningsDatabase::new();
 
     let mut search_thread: Option<thread::JoinHandle<()>> = None;
     #[allow(unused_assignments)]
@@ -84,8 +86,9 @@ fn main() {
                     search_thread_sender = thread_communicators.0;
                     search_thread_receiver = thread_communicators.1;
 
+                    let odb = openings_database.clone();
                     search_thread = Some(thread::spawn(move || {
-                        let best_move = game_clone.get_best_move(6);
+                        let best_move = game_clone.get_best_move(6, &odb);
                         search_thread_sender.send(best_move).unwrap();
                     }));
                 } else if command == "stop" {

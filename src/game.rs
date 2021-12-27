@@ -5,6 +5,7 @@ use crate::utils::{ with_offsets };
 use colored::*;
 use std::time::{ Instant };
 use std::thread;
+use crate::openings::{ OpeningsDatabase };
 
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
@@ -243,6 +244,7 @@ impl Game {
         }
 
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
+        self.moves.push(*mve);
     }
 
     pub fn get_board_score(&self, color: Color) -> i64 {
@@ -337,7 +339,12 @@ impl Game {
         false
     }
 
-    pub fn get_best_move(&self, depth: u8) -> Move {
+    pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Move {
+        match opening_database.find_opening(&self.moves) {
+            Some(mve) => return mve,
+            None => {},
+        }
+
         let all_moves = self.get_all_moves(self.on_turn);
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
 

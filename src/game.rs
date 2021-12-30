@@ -321,6 +321,9 @@ impl Game {
             Color::Black => { self.score_white -= score_delta },
         };
 
+        if self.on_turn == Color::Black {
+            self.fullmove_counter += 1;
+        }
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
         self.moves.push(*mve);
     }

@@ -482,7 +482,7 @@ impl Game {
             if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
                 return game_score;
             }
-            if depth < 1 {
+            if depth > 1 {
                 game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1) * -1;
             }
 
@@ -495,7 +495,7 @@ impl Game {
 
             // ab-pruning
             if game_score > score_to_beat {
-                return highest_score;
+                return game_score;
             }
 
             if game_score > highest_score {

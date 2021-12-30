@@ -3,7 +3,6 @@ use crate::consts::{ Color, PieceType, MoveType };
 use crate::move_struct::{ Move };
 use crate::utils::{ with_offsets, string_square_to_square };
 use colored::*;
-use std::time::{ Instant };
 use std::thread;
 use crate::openings::{ OpeningsDatabase };
 
@@ -425,18 +424,16 @@ impl Game {
         false
     }
 
-    pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Vec<(Move, i64)> {
+    pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Move {
         if self.moves.len() == self.fullmove_counter {
             match opening_database.find_opening(&self.moves) {
-                Some(mve) => return vec![(mve, 0)],
+                Some(mve) => return mve,
                 None => {},
             }
         }
 
         let all_moves = self.get_all_moves(self.on_turn);
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
-
-        // let now = Instant::now();
 
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
@@ -450,7 +447,6 @@ impl Game {
         }
 
         let mut best_moves: Vec<(Move, i64)> = Vec::new();
-        let threads_len = threads.len();
         let mut idx = 0;
         for t in threads {
             let result = t.join().unwrap();
@@ -468,7 +464,7 @@ impl Game {
             idx += 1;
         }
 
-        best_moves
+        best_moves[0].0
     }
 
     pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> i64 {

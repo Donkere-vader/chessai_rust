@@ -40,7 +40,7 @@ fn main() {
 
     let mut search_thread: Option<thread::JoinHandle<()>> = None;
     #[allow(unused_assignments)]
-    let (mut search_thread_sender, mut search_thread_receiver) = mpsc::channel::<Vec<(Move, i64)>>();
+    let (mut search_thread_sender, mut search_thread_receiver) = mpsc::channel::<Move>();
     let mut game: Game = Game::from_fen(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
     let mut got_initial_position = false;
     let stdin_channel = spawn_stdin_channel();
@@ -97,14 +97,14 @@ fn main() {
                     logger.log(LogType::Info, board_text);
                 } else if command == "go" && got_initial_position {
                     let game_clone = game.clone();
-                    let thread_communicators = mpsc::channel::<Vec<(Move, i64)>>();
+                    let thread_communicators = mpsc::channel::<Move>();
                     search_thread_sender = thread_communicators.0;
                     search_thread_receiver = thread_communicators.1;
 
                     let odb = openings_database.clone();
                     search_thread = Some(thread::spawn(move || {
-                        let best_moves = game_clone.get_best_move(6, &odb);
-                        search_thread_sender.send(best_moves).unwrap();
+                        let best_move = game_clone.get_best_move(6, &odb);
+                        search_thread_sender.send(best_move).unwrap();
                     }));
                 } else if command == "stop" {
                     if search_thread.is_some() {
@@ -118,8 +118,8 @@ fn main() {
                 match &search_thread {
                     Some(_) => {
                         match search_thread_receiver.try_recv() {
-                            Ok(mves) => {
-                                game.do_move(&mves[0].0);
+                            Ok(mve) => {
+                                game.do_move(&mve);
 
                                 let mut board_text = String::from("Board:\n");
                                 for y in 0..8 {
@@ -134,13 +134,9 @@ fn main() {
                                 }
                                 logger.log(LogType::Info, board_text);
 
-                                for mve in mves.iter() {
-                                    logger.log(LogType::Info, format!("{} -> {}", mve.0.repr(), mve.1));
-                                }
+                                logger.log(LogType::Info, mve.repr());
 
-                                logger.log(LogType::Info, mves[0].0.repr());
-
-                                println!("bestmove {}", mves[0].0.long_algebraic_notation());
+                                println!("bestmove {}", mve.long_algebraic_notation());
                                 search_thread = None;
                             },
                             Err(TryRecvError::Empty) => {},

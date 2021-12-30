@@ -52,13 +52,9 @@ fn score_predict_same_as_calculate() {
 fn dont_check_self() {
     let game = Game::from_fen(String::from("kr6/r7/8/8/8/8/8/2K5 w KQkq - 0 100"));
     let opening_database = OpeningsDatabase::new();
-    let best_moves = game.get_best_move(6, &opening_database);
+    let best_move = game.get_best_move(6, &opening_database);
 
-    for mve in best_moves.iter() {
-        println!("{} -> {}", mve.0.repr(), mve.1);
-    }
-
-    assert_ne!(best_moves[0].0.to[0], 1);
+    assert_ne!(best_move.to[0], 1);
 }
 
 #[test]

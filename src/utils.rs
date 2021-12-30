@@ -2,6 +2,7 @@ use crate::move_struct::{ Move };
 use crate::consts::{ Color };
 use crate::piece::{ Piece };
 
+
 pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
     let mut new_moves: Vec<Move> = Vec::new();
 
@@ -64,4 +65,13 @@ pub fn with_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
     }
 
     new_moves
+}
+
+pub fn string_square_to_square(string_square: String) -> [i8; 2] {
+    let mut square = [0i8; 2];
+    let string_square_chars = string_square.chars().collect::<Vec<char>>();
+    square[0] = vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|x| string_square_chars[0] == *x).unwrap() as i8;
+    square[1] = string_square_chars[1].to_digit(10).unwrap() as i8 - 1;
+
+    square
 }

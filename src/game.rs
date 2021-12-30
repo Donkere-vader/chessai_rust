@@ -1,7 +1,7 @@
 use crate::piece::{ Piece, get_all_piece_moves };
 use crate::consts::{ Color, PieceType, MoveType };
 use crate::move_struct::{ Move };
-use crate::utils::{ with_offsets };
+use crate::utils::{ with_offsets, string_square_to_square };
 use colored::*;
 use std::time::{ Instant };
 use std::thread;
@@ -18,6 +18,8 @@ pub struct Game {
     pub castle: Vec<Piece>,
     pub en_passant_target_square: Option<[i8; 2]>,
     pub moves: Vec<Move>,
+    pub score_white: i64,
+    pub fullmove_counter: usize,
 }
 
 
@@ -27,8 +29,10 @@ impl Game {
         let mut board: [[Option<Piece>; 8]; 8] = Default::default();
         let mut castle_vec = Vec::new();
         let on_turn;
+        let en_passant_target_square;
+        let fullmove_counter;
 
-        if let [board_string, on_turn_fen_let, castling, _en_passant_target_square, _haflmove_clock, _fullmove_counter] = &splitted_fen[..] {
+        if let [board_string, on_turn_fen_let, castling, en_passant_target_square_string, _halfmove_clock, fullmove_counter_string] = &splitted_fen[..] {
             let mut y = 0;
             for rank in board_string.rsplit("/") {
                 let mut x = 0;
@@ -55,17 +59,31 @@ impl Game {
                 if piece_char == '-' { break; }
                 castle_vec.push(Piece::from_fen(piece_char));
             }
+
+            if *en_passant_target_square_string != "-" {
+                en_passant_target_square = Some(string_square_to_square(en_passant_target_square_string.to_string()));
+            } else {
+                en_passant_target_square = None;
+            }
+
+            fullmove_counter = fullmove_counter_string.parse::<usize>().unwrap();
         } else {
             panic!("Illegal FEN code");
         }
 
-        Game {
+        let mut new_game = Game {
             board: board,
             on_turn: on_turn,
             castle: castle_vec,
-            en_passant_target_square: None,
+            en_passant_target_square: en_passant_target_square,
+            score_white: 0,
             moves: Vec::new(),
-        }
+            fullmove_counter: fullmove_counter
+        };
+
+        new_game.calculate_board_score();
+
+        new_game
     }
 
     pub fn apply_moves(&mut self, moves: &Vec<Move>) {
@@ -178,17 +196,29 @@ impl Game {
     }
 
     pub fn do_move(&mut self, mve: &Move) {
+        let mut score_delta: i64 = 0;
         self.en_passant_target_square = None;
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize].unwrap();
+        let mut take_piece = None;
+        let mut take_piece_cord = [0usize; 2];
+        score_delta -= piece.score(mve.from[0] as usize, mve.from[1] as usize);
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
-        let (mve_type, mve_piece) = mve.get_move_type(Some(self.castle.to_vec()), self.en_passant_target_square, Some(piece.piece_type));
+        let (mve_type, mve_piece) = mve.get_move_type(Some(&self.castle), self.en_passant_target_square, Some(piece.piece_type));
         match mve_type {
             MoveType::Standard => {
+                // update score
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize);
+
+                // do move
                 // check for disable castle
                 let mut pieces_to_check = vec![piece];
                 match self.board[mve.to[1] as usize ][mve.to[0] as usize] {
-                    Some(p) => { pieces_to_check.push(p) },
+                    Some(p) => {
+                        pieces_to_check.push(p);
+                        take_piece = Some(p);
+                        take_piece_cord = [mve.to[0] as usize, mve.to[1] as usize];
+                    },
                     None => {},
                 };
                 for p in pieces_to_check {
@@ -220,34 +250,90 @@ impl Game {
                 }
             },
             MoveType::Promote => {
-                self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve.piece;
+                // update score
+                score_delta += mve_piece.unwrap().score(mve.to[0] as usize, mve.to[1] as usize);
+
+                // do move
+                self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve_piece;
             },
             MoveType::Castle => {
+                // do move
                 let mve_piece = mve_piece.unwrap();
                 let y = mve.to[1] as usize;
                 if mve_piece.piece_type == PieceType::King {
+                    score_delta += piece.score(6, y);
                     self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
+                    match self.board[y][7] {
+                        Some(p) => {
+                            score_delta -= p.score(7, y);
+                            score_delta += p.score(5, y);
+                        },
+                        None => {},
+                    }
                     self.board[y][7] = None;
                 } else if mve_piece.piece_type == PieceType::Queen {
+                    score_delta += piece.score(2, y);
                     self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
+                    match self.board[y][0] {
+                        Some(p) => {
+                            score_delta -= p.score(0, y);
+                            score_delta += p.score(3, y);
+                        },
+                        None => {},
+                    }
                     self.board[y][0] = None;
                 }
 
                 self.castle.remove(self.castle.iter().position(|x| *x == mve_piece).unwrap());
             },
             MoveType::EnPassant => {
+                // update score
+                match self.board[mve.from[1] as usize][mve.to[0] as usize] {
+                    Some(p) => {
+                        take_piece = Some(p);
+                        take_piece_cord = [mve.to[0] as usize, mve.from[1] as usize];
+                    },
+                    None => {},
+                }
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize);
+
+                // do move
                 self.board[mve.from[1] as usize][mve.to[0] as usize] = None;
                 self.board[mve.to[1] as usize][mve.to[0] as usize] = Some(piece);
             },
         }
 
+        match take_piece {
+            Some(p) => {
+                if p.piece_type == PieceType::King {
+                    self.score_white = if p.color == Color::White { -i64::MAX } else { i64::MAX };
+                    score_delta = 0;
+                } else {
+                    score_delta += p.score(take_piece_cord[0], take_piece_cord[1]);
+                }
+            },
+            None => {},
+        };
+
+        match piece.color {
+            Color::White => { self.score_white += score_delta },
+            Color::Black => { self.score_white -= score_delta },
+        };
+
         self.on_turn = if self.on_turn == Color::White { Color::Black } else { Color::White };
         self.moves.push(*mve);
     }
 
-    pub fn get_board_score(&self, color: Color) -> i64 {
+    pub fn get_board_score(&mut self, color: Color) -> i64 {
+        match color {
+            Color::White => self.score_white,
+            Color::Black => self.score_white * -1,
+        }
+    }
+
+    pub fn calculate_board_score(&mut self) {
         let mut board_score: i64 = 0;
 
         let mut white_king_present = false;
@@ -261,7 +347,7 @@ impl Game {
                 match piece {
                     Some(p) => {
                         let piece_score = p.score(x, y);
-                        if p.color == color {
+                        if p.color == Color::White {
                             board_score += piece_score;
                         } else {
                             board_score -= piece_score;
@@ -283,12 +369,12 @@ impl Game {
 
         if !white_king_present || !black_king_present {
             board_score = CHECK_MATE_SCORE;
-            if (!white_king_present && color == Color::White) || (!black_king_present && color == Color::Black) {
+            if !white_king_present {
                 board_score *= -1;
             }
         }
 
-        board_score
+        self.score_white = board_score;
     }
 
     pub fn get_all_moves(&self, color: Color) -> Vec<Move> {
@@ -339,47 +425,50 @@ impl Game {
         false
     }
 
-    pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Move {
-        match opening_database.find_opening(&self.moves) {
-            Some(mve) => return mve,
-            None => {},
+    pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Vec<(Move, i64)> {
+        if self.moves.len() == self.fullmove_counter {
+            match opening_database.find_opening(&self.moves) {
+                Some(mve) => return vec![(mve, 0)],
+                None => {},
+            }
         }
 
         let all_moves = self.get_all_moves(self.on_turn);
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
 
-        let now = Instant::now();
+        // let now = Instant::now();
 
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 2, depth, CHECK_MATE_SCORE) * -1;
+                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1;
                     game_score
                 })
             );
         }
 
-        let mut best_move = all_moves[0];
-        let mut highest_score: i64 = -CHECK_MATE_SCORE;
-
+        let mut best_moves: Vec<(Move, i64)> = Vec::new();
+        let threads_len = threads.len();
         let mut idx = 0;
         for t in threads {
             let result = t.join().unwrap();
+            let mve = all_moves[idx];
 
-            if result > highest_score {
-                println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { result } else { result * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
-                // highest_backtrack = backtrack;
-                best_move = all_moves[idx];
-                highest_score = result;
+            let mut insert_at = best_moves.len();
+            for (i, item) in best_moves.to_vec().into_iter().enumerate() {
+                if result > item.1 {
+                    insert_at = i;
+                    break;
+                }
             }
+            best_moves.insert(insert_at, (mve, result));
 
             idx += 1;
         }
 
-        println!("info depth {} score cp {} time {} pv {}", depth, if self.on_turn == Color::White { highest_score } else { highest_score * -1 }, now.elapsed().as_millis(), best_move.long_algebraic_notation());
-        best_move
+        best_moves
     }
 
     pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> i64 {
@@ -394,10 +483,10 @@ impl Game {
             // calculate the score of the game
             let mut game_score: i64;
             game_score = new_game.get_board_score(new_game.on_turn) * -1;
-            if game_score == -CHECK_MATE_SCORE {
-                return CHECK_MATE_SCORE * -1;
+            if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
+                return game_score;
             }
-            if depth != 0 {
+            if depth < 1 {
                 game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1) * -1;
             }
 
@@ -407,13 +496,14 @@ impl Game {
             } else if game_score < -CHECK_MATE_SCORE + maximum_depth as i64 {
                 game_score += 1;
             }
-            if game_score > highest_score {
-                highest_score = game_score;
-            }
 
             // ab-pruning
-            if highest_score > score_to_beat {
+            if game_score > score_to_beat {
                 return highest_score;
+            }
+
+            if game_score > highest_score {
+                highest_score = game_score;
             }
         }
 

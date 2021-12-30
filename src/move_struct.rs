@@ -52,7 +52,7 @@ impl Move {
         format!("<Move {}>", self.long_algebraic_notation())
     }
 
-    pub fn get_move_type(&self, castling: Option<Vec<Piece>>, en_passant_target_square: Option<[i8; 2]>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
+    pub fn get_move_type(&self, castling: Option<&Vec<Piece>>, en_passant_target_square: Option<[i8; 2]>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
         if self.piece.is_some() {
             if self.from[1] == 6 || self.from[1] == 1 {
                 return (MoveType::Promote, self.piece);
@@ -64,9 +64,9 @@ impl Move {
             let color = if self.from[1] == 0 { Color::White } else { Color::Black };
             let king = Piece { piece_type: PieceType::King, color: color};
             let queen = Piece { piece_type: PieceType::Queen, color: color};
-            if self.to[0] == 6 && castling.contains(&king) {
+            if (self.to[0] == 6 || self.to[0] == 7) && castling.contains(&king) {
                 return (MoveType::Castle, Some(king));
-            } else if self.to[0] == 2 && castling.contains(&Piece { piece_type: PieceType::Queen, color: color}) {
+            } else if (self.to[0] == 2 || self.to[0] == 0) && castling.contains(&Piece { piece_type: PieceType::Queen, color: color}) {
                 return (MoveType::Castle, Some(queen));
             }
         }

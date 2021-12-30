@@ -15,7 +15,7 @@ pub enum Color {
     Black,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum MoveType {
     Standard,
     Promote,

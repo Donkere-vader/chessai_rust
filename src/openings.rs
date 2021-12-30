@@ -11,7 +11,9 @@ struct Opening {
 }
 
 #[derive(Clone)]
-pub struct OpeningsDatabase {
+pub struct 
+
+OpeningsDatabase {
     openings: Vec<Opening>,
 }
 
@@ -32,7 +34,11 @@ impl OpeningsDatabase {
             if line_type == "ECO" {
                 eco = Some(splitted_line[1]);
             } else if line_type == "NAME" {
-                name = Some(splitted_line[1])
+                let mut name_string = String::new();
+                for i in 1..splitted_line.len() {
+                    name_string += splitted_line[i];
+                }
+                name = Some(name_string)
             } else if line_type == "UCI" {
                 let mut new_moves = Vec::new();
                 for (idx, item) in splitted_line.iter().enumerate() {

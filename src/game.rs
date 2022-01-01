@@ -429,6 +429,7 @@ impl Game {
     }
 
     pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Move {
+        // check for move from opening database
         if self.moves.len() == self.fullmove_counter {
             match opening_database.find_opening(&self.moves) {
                 Some(mve) => return mve,
@@ -436,9 +437,9 @@ impl Game {
             }
         }
 
+        // spawn threads
         let all_moves = self.get_all_moves(self.on_turn);
         let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
-
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
             new_game.do_move(&mve);
@@ -450,6 +451,7 @@ impl Game {
             );
         }
 
+        // recieve moves from threads
         let mut best_moves: Vec<(Move, i64)> = Vec::new();
         let mut idx = 0;
         for t in threads {
@@ -468,6 +470,7 @@ impl Game {
             idx += 1;
         }
 
+        // calculate best move(s) with same highest score
         let mut same_score = 1;
         for mve in best_moves.iter().skip(1) {
             if mve.1 < best_moves[0].1 {
@@ -512,6 +515,7 @@ impl Game {
                 return game_score;
             }
 
+            // update highest score
             if game_score > highest_score {
                 highest_score = game_score;
             }

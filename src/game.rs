@@ -5,6 +5,7 @@ use crate::utils::{ with_offsets, string_square_to_square };
 use colored::*;
 use std::thread;
 use crate::openings::{ OpeningsDatabase };
+use rand::Rng;
 
 
 const CHECK_MATE_SCORE: i64 = i64::MAX;
@@ -467,7 +468,17 @@ impl Game {
             idx += 1;
         }
 
-        best_moves[0].0
+        let mut same_score = 1;
+        for mve in best_moves.iter().skip(1) {
+            if mve.1 < best_moves[0].1 {
+                break;
+            }
+            same_score += 1;
+        }
+
+        let move_idx = rand::thread_rng().gen_range(0..same_score);
+
+        best_moves[move_idx].0
     }
 
     pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> i64 {

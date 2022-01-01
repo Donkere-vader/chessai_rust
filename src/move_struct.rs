@@ -1,5 +1,6 @@
 use crate::consts::{ MoveType, PieceType, Color };
 use crate::piece::{ Piece };
+use std::fmt;
 
 
 #[derive(Copy, Clone)]
@@ -102,5 +103,11 @@ impl Move {
         };
 
         format!("{}{}{}", from, to, promotion)
+    }
+}
+
+impl fmt::Debug for Move {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "{}", self.repr())
     }
 }

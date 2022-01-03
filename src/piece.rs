@@ -1,4 +1,4 @@
-use crate::consts::{ PieceType, Color };
+use crate::consts::{ PieceType, Color, GameFase };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 use crate::game::{ Game };
 use crate::utils::{ with_offsets, walk_offsets };
@@ -57,18 +57,18 @@ impl Piece {
         }
     }
 
-    pub fn score(&self, x: usize, mut y: usize) -> i64 {
+    pub fn score(&self, x: usize, mut y: usize, game_fase: &GameFase) -> i64 {
         if self.color == Color::Black {
             y = 7 - y;
         }
 
         match self.piece_type {
-            PieceType::King => SCORE_KING[y][x],
-            PieceType::Queen => SCORE_QUEEN[y][x] * 9,
-            PieceType::Bishop => SCORE_BISHOP[y][x] * 3,
-            PieceType::Knight => SCORE_KNIGHT[y][x] * 3,
-            PieceType::Rook => SCORE_ROOK[y][x] * 5,
-            PieceType::Pawn => SCORE_PAWN[y][x],
+            PieceType::King => SCORE_KING[*game_fase as usize][y][x],
+            PieceType::Queen => SCORE_QUEEN[*game_fase as usize][y][x] * 9,
+            PieceType::Bishop => SCORE_BISHOP[*game_fase as usize][y][x] * 3,
+            PieceType::Knight => SCORE_KNIGHT[*game_fase as usize][y][x] * 3,
+            PieceType::Rook => SCORE_ROOK[*game_fase as usize][y][x] * 5,
+            PieceType::Pawn => SCORE_PAWN[*game_fase as usize][y][x],
         }
     }
 

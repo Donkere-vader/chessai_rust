@@ -1,6 +1,6 @@
 use crate::game::{ Game };
 use crate::piece::{ Piece };
-use crate::consts::{ Color, PieceType };
+use crate::consts::{ Color, PieceType, GameFase };
 use crate::openings::{ OpeningsDatabase };
 use crate::move_struct::{ Move };
 use crate::utils::{ string_square_to_square };
@@ -87,3 +87,20 @@ fn string_square_to_square_test() {
     assert_eq!(string_square_to_square(String::from("b5")), [1, 4]);
     assert_eq!(string_square_to_square(String::from("f5")), [5, 4]);
 }
+
+// #[test]
+// fn game_fase_calculator() {
+//     let fen_codes: Vec<(String, GameFase)> = vec![
+//         ("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string(), GameFase::StartGame),
+//         ("r2qkbnr/2pNpppp/p1Q5/8/3p2b1/2P5/PP1PPP1P/RNB1KB1R w KQkq - 0 9".to_string(), GameFase::MidGame),
+//         ("7k/7r/5r2/K7/8/8/8/8 b KQkq - 0 1".to_string(), GameFase::EndGame),
+//     ];
+
+//     for fen_code_combi in fen_codes.iter() {
+//         let mut new_game = Game::from_fen(fen_code_combi.0.to_string());
+//         new_game.calculate_game_fase();
+//         println!("{}", fen_code_combi.0);
+//         new_game.show_board(None, Color::White);
+//         assert_eq!(fen_code_combi.1, new_game.game_fase);
+//     }
+// }

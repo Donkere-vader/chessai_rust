@@ -22,3 +22,10 @@ pub enum MoveType {
     Castle,
     EnPassant
 }
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub enum GameFase {
+    StartGame = 0,
+    MidGame = 1,
+    EndGame = 2,
+}

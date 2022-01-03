@@ -1,5 +1,5 @@
 use crate::piece::{ Piece, get_all_piece_moves };
-use crate::consts::{ Color, PieceType, MoveType };
+use crate::consts::{ Color, PieceType, MoveType, GameFase };
 use crate::move_struct::{ Move };
 use crate::utils::{ with_offsets, string_square_to_square };
 use colored::*;
@@ -20,6 +20,7 @@ pub struct Game {
     pub moves: Vec<Move>,
     pub score_white: i64,
     pub fullmove_counter: usize,
+    pub game_fase: GameFase,
 }
 
 
@@ -78,10 +79,12 @@ impl Game {
             en_passant_target_square: en_passant_target_square,
             score_white: 0,
             moves: Vec::new(),
-            fullmove_counter: fullmove_counter
+            fullmove_counter: fullmove_counter,
+            game_fase: GameFase::StartGame,
         };
 
         new_game.calculate_board_score();
+        new_game.calculate_game_fase();
 
         new_game
     }
@@ -195,20 +198,46 @@ impl Game {
         }
     }
 
+    pub fn calculate_game_fase(&mut self) {
+        let mut n_pieces_midfield = 0;
+        let mut n_pieces = 0;
+        for y in 0..8 {
+            for x in 0..8 {
+                match self.board[y][x] {
+                    Some(_) => {
+                        n_pieces += 1;
+                        if y >= 2 && y <= 5 {
+                            n_pieces_midfield += 1;
+                        }
+                    },
+                    None => {},
+                }
+            }
+        }
+
+        if n_pieces_midfield > 8 || self.fullmove_counter > 15 {
+            self.game_fase = GameFase::MidGame;
+        }
+
+        if n_pieces < 12 {
+            self.game_fase = GameFase::EndGame;
+        }
+    }
+
     pub fn do_move(&mut self, mve: &Move) {
         let mut score_delta: i64 = 0;
         self.en_passant_target_square = None;
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize].unwrap();
         let mut take_piece = None;
         let mut take_piece_cord = [0usize; 2];
-        score_delta -= piece.score(mve.from[0] as usize, mve.from[1] as usize);
+        score_delta -= piece.score(mve.from[0] as usize, mve.from[1] as usize, &self.game_fase);
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
         let (mve_type, mve_piece) = mve.get_move_type(Some(&self.castle), self.en_passant_target_square, Some(piece.piece_type));
         match mve_type {
             MoveType::Standard => {
                 // update score
-                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize);
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
 
                 // do move
                 // check for disable castle
@@ -251,7 +280,7 @@ impl Game {
             },
             MoveType::Promote => {
                 // update score
-                score_delta += mve_piece.unwrap().score(mve.to[0] as usize, mve.to[1] as usize);
+                score_delta += mve_piece.unwrap().score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
 
                 // do move
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve_piece;
@@ -261,25 +290,25 @@ impl Game {
                 let mve_piece = mve_piece.unwrap();
                 let y = mve.to[1] as usize;
                 if mve_piece.piece_type == PieceType::King {
-                    score_delta += piece.score(6, y);
+                    score_delta += piece.score(6, y, &self.game_fase);
                     self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
                     match self.board[y][7] {
                         Some(p) => {
-                            score_delta -= p.score(7, y);
-                            score_delta += p.score(5, y);
+                            score_delta -= p.score(7, y, &self.game_fase);
+                            score_delta += p.score(5, y, &self.game_fase);
                         },
                         None => {},
                     }
                     self.board[y][7] = None;
                 } else if mve_piece.piece_type == PieceType::Queen {
-                    score_delta += piece.score(2, y);
+                    score_delta += piece.score(2, y, &self.game_fase);
                     self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
                     match self.board[y][0] {
                         Some(p) => {
-                            score_delta -= p.score(0, y);
-                            score_delta += p.score(3, y);
+                            score_delta -= p.score(0, y, &self.game_fase);
+                            score_delta += p.score(3, y, &self.game_fase);
                         },
                         None => {},
                     }
@@ -297,7 +326,7 @@ impl Game {
                     },
                     None => {},
                 }
-                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize);
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
 
                 // do move
                 self.board[mve.from[1] as usize][mve.to[0] as usize] = None;
@@ -311,7 +340,7 @@ impl Game {
                     self.score_white = if p.color == Color::White { -i64::MAX } else { i64::MAX };
                     score_delta = 0;
                 } else {
-                    score_delta += p.score(take_piece_cord[0], take_piece_cord[1]);
+                    score_delta += p.score(take_piece_cord[0], take_piece_cord[1], &self.game_fase);
                 }
             },
             None => {},
@@ -349,7 +378,7 @@ impl Game {
             for piece in rank.iter() {
                 match piece {
                     Some(p) => {
-                        let piece_score = p.score(x, y);
+                        let piece_score = p.score(x, y, &self.game_fase);
                         if p.color == Color::White {
                             board_score += piece_score;
                         } else {
@@ -457,6 +486,8 @@ impl Game {
         for t in threads {
             let result = t.join().unwrap();
             let mve = all_moves[idx];
+
+            println!("{} -> {}", mve.repr(), result);
 
             let mut insert_at = best_moves.len();
             for (i, item) in best_moves.to_vec().into_iter().enumerate() {

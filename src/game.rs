@@ -224,6 +224,19 @@ impl Game {
         }
     }
 
+    fn disable_castle(&mut self, color: &Color) {
+        let mut idxs_to_remove = Vec::new();
+        for (idx, piece) in self.castle.iter().enumerate() {
+            if piece.color == *color {
+                idxs_to_remove.push(idx);
+            }
+        }
+
+        for (idx, delete_idx) in idxs_to_remove.iter().enumerate() {
+            self.castle.remove(delete_idx - idx);
+        }
+    }
+
     pub fn do_move(&mut self, mve: &Move) {
         let mut score_delta: i64 = 0;
         self.en_passant_target_square = None;
@@ -252,13 +265,7 @@ impl Game {
                 };
                 for p in pieces_to_check {
                     if p.piece_type == PieceType::King {
-                        if self.castle.contains(&p) {
-                            self.castle.remove(self.castle.iter().position(|x| *x == p).unwrap());
-                        }
-                        let queen = Piece { piece_type: PieceType::Queen, color: p.color };
-                        if self.castle.contains(&queen) {
-                            self.castle.remove(self.castle.iter().position(|x| *x == queen).unwrap());
-                        }
+                        self.disable_castle(&p.color);
                     } else {
                         if p.piece_type == PieceType::Rook {
                             let to_remove_piece = Piece { piece_type: if mve.from[0] == 0 { PieceType::Queen } else { PieceType::King }, color: p.color};
@@ -315,7 +322,7 @@ impl Game {
                     self.board[y][0] = None;
                 }
 
-                self.castle.remove(self.castle.iter().position(|x| *x == mve_piece).unwrap());
+                self.disable_castle(&mve_piece.color);
             },
             MoveType::EnPassant => {
                 // update score
@@ -468,14 +475,14 @@ impl Game {
 
         // spawn threads
         let all_moves = self.get_all_moves(self.on_turn);
-        let mut threads: Vec<thread::JoinHandle<i64>> = Vec::new();
+        let mut threads: Vec<thread::JoinHandle<(i64, Move)>> = Vec::new();
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
             new_game.do_move(&mve);
             threads.push(
                 thread::spawn(move || {
-                    let game_score = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE) * -1;
-                    game_score
+                    let r = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE);
+                    (r.0 * -1, r.1)
                 })
             );
         }
@@ -487,16 +494,16 @@ impl Game {
             let result = t.join().unwrap();
             let mve = all_moves[idx];
 
-            println!("{} -> {}", mve.repr(), result);
+            println!("{} -> {} next expected move: {}", mve.repr(), result.0, result.1.repr());
 
             let mut insert_at = best_moves.len();
             for (i, item) in best_moves.to_vec().into_iter().enumerate() {
-                if result > item.1 {
+                if result.0 > item.1 {
                     insert_at = i;
                     break;
                 }
             }
-            best_moves.insert(insert_at, (mve, result));
+            best_moves.insert(insert_at, (mve, result.0));
 
             idx += 1;
         }
@@ -515,10 +522,11 @@ impl Game {
         best_moves[move_idx].0
     }
 
-    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> i64 {
+    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> (i64, Move) {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
+        let mut best_move = Move::from_long_algebraic_notatoin(String::from("a1a2"));
         for mve in all_moves.iter() {
             // generate new game from move
             let mut new_game = self.clone();
@@ -528,10 +536,11 @@ impl Game {
             let mut game_score: i64;
             game_score = new_game.get_board_score(new_game.on_turn) * -1;
             if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
-                return game_score;
+                return (game_score, *mve);
             }
             if depth > 1 {
-                game_score = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1) * -1;
+                let r = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1);
+                game_score = r.0 * -1;
             }
 
             // check if this is the best peforming one
@@ -543,15 +552,16 @@ impl Game {
 
             // ab-pruning
             if game_score > score_to_beat {
-                return game_score;
+                return (game_score, *mve);
             }
 
             // update highest score
             if game_score > highest_score {
                 highest_score = game_score;
+                best_move = *mve;
             }
         }
 
-        highest_score
+        (highest_score, best_move)
     }
 }

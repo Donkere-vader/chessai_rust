@@ -1,6 +1,6 @@
 use crate::game::{ Game };
 use crate::piece::{ Piece };
-use crate::consts::{ Color, PieceType, GameFase };
+use crate::consts::{ Color, PieceType };
 use crate::openings::{ OpeningsDatabase };
 use crate::move_struct::{ Move };
 use crate::utils::{ string_square_to_square };

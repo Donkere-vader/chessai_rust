@@ -5,6 +5,8 @@ use std::sync::mpsc::TryRecvError;
 use logger::{ Logger, LogType };
 use game::{ Game };
 use move_struct::{ Move };
+use consts::{ Color };
+use std::time::{ Duration };
 
 mod consts;
 mod game;
@@ -96,6 +98,9 @@ fn main() {
                     }
                     logger.log(LogType::Info, board_text);
                 } else if command == "go" && got_initial_position {
+                    game.show_board(None, Color::Black);
+                    println!("FENCODE: {}", game.to_fen());
+
                     let game_clone = game.clone();
                     let thread_communicators = mpsc::channel::<Move>();
                     search_thread_sender = thread_communicators.0;
@@ -103,7 +108,7 @@ fn main() {
 
                     let odb = openings_database.clone();
                     search_thread = Some(thread::spawn(move || {
-                        let best_move = game_clone.get_best_move(6, &odb);
+                        let best_move = game_clone.get_best_move(5, &odb);
                         search_thread_sender.send(best_move).unwrap();
                     }));
                 } else if command == "stop" {
@@ -148,5 +153,7 @@ fn main() {
             },
             Err(TryRecvError::Disconnected) => panic!("Channel disconnected"),
         }
+
+        thread::sleep(Duration::from_millis(100));
     }
 }

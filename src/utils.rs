@@ -19,7 +19,7 @@ pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
                 break;
             }
 
-            // Chech if tile is empty or takable
+            // Check if tile is empty or takable
             match &board[current_coord[1] as usize][current_coord[0] as usize] {
                 Some(p) => {
                     if p.color != *color && take {
@@ -30,7 +30,7 @@ pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
                 None => new_moves.push( Move::simple_new(*&from, *&current_coord) ),
             }
 
-            // Chech if max_distance is not yet reached
+            // Check if max_distance is not yet reached
             distance += 1;
             match max_distance {
                 Some(mx_d) => {

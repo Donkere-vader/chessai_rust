@@ -1,4 +1,4 @@
-use crate::consts::{ GameFase };
+use crate::consts::{ GamePhase };
 use crate::game::{ Game };
 use crate::consts::{ Color, CHECK_MATE_SCORE };
 use crate::move_struct::{ Move };
@@ -6,7 +6,7 @@ use crate::consts::{ PieceType };
 
 
 impl Game {
-    pub fn calculate_game_fase(&mut self) {
+    pub fn calculate_game_phase(&mut self) {
         let mut n_pieces_midfield = 0;
         let mut n_pieces = 0;
         for y in 0..8 {
@@ -24,11 +24,11 @@ impl Game {
         }
 
         if n_pieces_midfield > 8 || self.fullmove_counter > 15 {
-            self.game_fase = GameFase::MidGame;
+            self.game_phase = GamePhase::MidGame;
         }
 
         if n_pieces < 12 {
-            self.game_fase = GameFase::EndGame;
+            self.game_phase = GamePhase::EndGame;
         }
     }
 
@@ -52,7 +52,7 @@ impl Game {
             for piece in rank.iter() {
                 match piece {
                     Some(p) => {
-                        let piece_score = p.score(x, y, &self.game_fase);
+                        let piece_score = p.score(x, y, &self.game_phase);
                         if p.color == Color::White {
                             board_score += piece_score;
                         } else {

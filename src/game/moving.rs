@@ -30,14 +30,14 @@ impl Game {
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize].unwrap();
         let mut take_piece = None;
         let mut take_piece_cord = [0usize; 2];
-        score_delta -= piece.score(mve.from[0] as usize, mve.from[1] as usize, &self.game_fase);
+        score_delta -= piece.score(mve.from[0] as usize, mve.from[1] as usize, &self.game_phase);
         self.board[mve.from[1] as usize ][mve.from[0] as usize] = None;
 
         let (mve_type, mve_piece) = mve.get_move_type(Some(&self.castle), self.en_passant_target_square, Some(piece.piece_type));
         match mve_type {
             MoveType::Standard => {
                 // update score
-                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_phase);
 
                 // do move
                 // check for disable castle
@@ -74,7 +74,7 @@ impl Game {
             },
             MoveType::Promote => {
                 // update score
-                score_delta += mve_piece.unwrap().score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
+                score_delta += mve_piece.unwrap().score(mve.to[0] as usize, mve.to[1] as usize, &self.game_phase);
 
                 // do move
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = mve_piece;
@@ -84,25 +84,25 @@ impl Game {
                 let mve_piece = mve_piece.unwrap();
                 let y = mve.to[1] as usize;
                 if mve_piece.piece_type == PieceType::King {
-                    score_delta += piece.score(6, y, &self.game_fase);
+                    score_delta += piece.score(6, y, &self.game_phase);
                     self.board[y][6] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][5] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
                     match self.board[y][7] {
                         Some(p) => {
-                            score_delta -= p.score(7, y, &self.game_fase);
-                            score_delta += p.score(5, y, &self.game_fase);
+                            score_delta -= p.score(7, y, &self.game_phase);
+                            score_delta += p.score(5, y, &self.game_phase);
                         },
                         None => {},
                     }
                     self.board[y][7] = None;
                 } else if mve_piece.piece_type == PieceType::Queen {
-                    score_delta += piece.score(2, y, &self.game_fase);
+                    score_delta += piece.score(2, y, &self.game_phase);
                     self.board[y][2] = Some(Piece { piece_type: PieceType::King, color: mve_piece.color});
                     self.board[y][3] = Some(Piece { piece_type: PieceType::Rook, color: mve_piece.color});
                     match self.board[y][0] {
                         Some(p) => {
-                            score_delta -= p.score(0, y, &self.game_fase);
-                            score_delta += p.score(3, y, &self.game_fase);
+                            score_delta -= p.score(0, y, &self.game_phase);
+                            score_delta += p.score(3, y, &self.game_phase);
                         },
                         None => {},
                     }
@@ -120,7 +120,7 @@ impl Game {
                     },
                     None => {},
                 }
-                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_fase);
+                score_delta += piece.score(mve.to[0] as usize, mve.to[1] as usize, &self.game_phase);
 
                 // do move
                 self.board[mve.from[1] as usize][mve.to[0] as usize] = None;
@@ -134,7 +134,7 @@ impl Game {
                     self.score_white = if p.color == Color::White { -i64::MAX } else { i64::MAX };
                     score_delta = 0;
                 } else {
-                    score_delta += p.score(take_piece_cord[0], take_piece_cord[1], &self.game_fase);
+                    score_delta += p.score(take_piece_cord[0], take_piece_cord[1], &self.game_phase);
                 }
             },
             None => {},

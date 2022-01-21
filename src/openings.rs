@@ -21,7 +21,7 @@ OpeningsDatabase {
 impl OpeningsDatabase {
     pub fn new() -> OpeningsDatabase {
         let path = Path::new("./chess_openings.txt");
-        if !path.exists() { panic!("No openigns database found!"); }
+        if !path.exists() { panic!("No openings database found!"); }
 
         let contents = fs::read_to_string(path).expect("Failed to read file");
         let mut openings = Vec::new();
@@ -43,7 +43,7 @@ impl OpeningsDatabase {
                 let mut new_moves = Vec::new();
                 for (idx, item) in splitted_line.iter().enumerate() {
                     if idx == 0 { continue }
-                    new_moves.push(Move::from_long_algebraic_notatoin(item.to_string()));
+                    new_moves.push(Move::from_long_algebraic_notation(item.to_string()));
                 }
                 moves = Some(new_moves)
             }

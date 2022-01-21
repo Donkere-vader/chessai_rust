@@ -1,5 +1,5 @@
 use crate::piece::{ Piece };
-use crate::consts::{ Color, GameFase };
+use crate::consts::{ Color, GamePhase };
 use crate::utils::{ string_square_to_square };
 use crate::game::{ Game };
 
@@ -60,11 +60,11 @@ impl Game {
             score_white: 0,
             moves: Vec::new(),
             fullmove_counter: fullmove_counter,
-            game_fase: GameFase::StartGame,
+            game_phase: GamePhase::StartGame,
         };
 
         new_game.calculate_board_score();
-        new_game.calculate_game_fase();
+        new_game.calculate_game_phase();
 
         new_game
     }

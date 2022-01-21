@@ -1,3 +1,8 @@
+#![warn(missing_docs)]
+
+//! Chess AI written in Rust.  
+//! This Ai was written for my Profielwerkstuk (dutch highschool thesis)
+
 use std::io;
 use std::thread;
 use std::sync::mpsc::{ Receiver, self };
@@ -50,7 +55,7 @@ fn main() {
     'main: loop {
         match stdin_channel.try_recv() {
             Ok(message) => {
-                logger.log(LogType::Info, format!("Recieved: {}", message));
+                logger.log(LogType::Info, format!("Received: {}", message));
                 let splitted_buffer = message.split(" ").collect::<Vec<&str>>();
                 let command = splitted_buffer[0];
 
@@ -75,7 +80,7 @@ fn main() {
                     game = Game::from_fen(start_fen_string);
                     for item in splitted_buffer.iter() {
                         if looking_at_move {
-                            let m = Move::from_long_algebraic_notatoin(String::from(*item));
+                            let m = Move::from_long_algebraic_notation(String::from(*item));
                             moves.push(m);
                         } else if *item == "moves" {
                             looking_at_move = true
@@ -141,7 +146,7 @@ fn main() {
 
                                 logger.log(LogType::Info, mve.repr());
 
-                                println!("bestmove {}", mve.long_algebraic_notation());
+                                println!("Best move {}", mve.long_algebraic_notation());
                                 search_thread = None;
                             },
                             Err(TryRecvError::Empty) => {},

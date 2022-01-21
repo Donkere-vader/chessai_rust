@@ -5,7 +5,7 @@ pub mod moving;
 pub mod best_move;
 
 use crate::piece::{ Piece };
-use crate::consts::{ Color, GameFase };
+use crate::consts::{ Color, GamePhase };
 use crate::move_struct::{ Move };
 
 #[derive(Clone)]
@@ -17,5 +17,5 @@ pub struct Game {
     pub moves: Vec<Move>,
     pub score_white: i64,
     pub fullmove_counter: usize,
-    pub game_fase: GameFase,
+    pub game_phase: GamePhase,
 }

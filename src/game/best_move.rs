@@ -94,7 +94,7 @@ impl Game {
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
-        let mut best_move = Move::from_long_algebraic_notatoin(String::from("a1a2"));
+        let mut best_move = Move::from_long_algebraic_notation(String::from("a1a2"));
         for mve in all_moves.iter() {
             // generate new game from move
             let mut new_game = self.clone();

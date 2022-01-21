@@ -1,3 +1,7 @@
+//! The actual functions for the Minimax algorithm.
+//! 
+//! All functions are in an impl for Game.
+
 use crate::piece::{ get_all_piece_moves };
 use crate::consts::{ Color, PieceType, CHECK_MATE_SCORE };
 use crate::move_struct::{ Move };
@@ -9,7 +13,11 @@ use crate::game::{ Game };
 
 
 impl Game {
+    //! Best move implementations
+
     pub fn square_is_attacked(&self, square: [i8; 2], color: Color) -> bool {
+        //! Returns true if the square at the given coordinate is under attack from the specified color.
+
         let other_color = if color == Color::White { Color::Black } else { Color::White };
         for piece_type in vec![PieceType::Knight, PieceType::Rook, PieceType::Bishop, PieceType::Pawn, PieceType::Queen] {
             for mve in get_all_piece_moves(piece_type, other_color, square[0], square[1], &self).iter() {
@@ -33,6 +41,11 @@ impl Game {
     }
 
     pub fn get_best_move(&self, depth: u8, opening_database: &OpeningsDatabase) -> Move {
+        //! Returns a move either from the openings database or from the Minimax algorithm
+        //! 
+        //! If there is a opening to be played it will go for that option.
+        //! Otherwise it will spawn threads to calculate the best move using the Minimax algorithm.
+
         // check for move from opening database
         if self.moves.len() == self.fullmove_counter {
             match opening_database.find_opening(&self.moves) {
@@ -55,7 +68,7 @@ impl Game {
             );
         }
 
-        // recieve moves from threads
+        // receive moves from threads
         let mut best_moves: Vec<(Move, i64)> = Vec::new();
         let mut idx = 0;
         for t in threads {
@@ -91,6 +104,11 @@ impl Game {
     }
 
     pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> (i64, Move) {
+        //! Function to calculate best move.
+        //! 
+        //! Each spawned thread by the function ``get_best_move`` runs this function for it's sub-game.
+        //! The Minimax algorithm continues in this function.
+
         let all_moves = self.get_all_moves(self.on_turn);
 
         let mut highest_score: i64 = -CHECK_MATE_SCORE;
@@ -111,7 +129,7 @@ impl Game {
                 game_score = r.0 * -1;
             }
 
-            // check if this is the best peforming one
+            // check if this is the best performing one
             if game_score > CHECK_MATE_SCORE - maximum_depth as i64 {
                 game_score -= 1;
             } else if game_score < -CHECK_MATE_SCORE + maximum_depth as i64 {

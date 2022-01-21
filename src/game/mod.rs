@@ -1,3 +1,5 @@
+//! Game module for keeping track of the game state and calculating the best moves
+
 pub mod storage;
 pub mod misc;
 pub mod evaluation;
@@ -7,6 +9,8 @@ pub mod best_move;
 use crate::piece::{ Piece };
 use crate::consts::{ Color, GamePhase };
 use crate::move_struct::{ Move };
+
+
 
 #[derive(Clone)]
 pub struct Game {

@@ -1,3 +1,8 @@
+//! Struct for openings database
+//! 
+//! This struct loads all the know openings from the openings file.
+//! And provides search functionality.
+
 use crate::move_struct::{ Move };
 use std::fs;
 use std::path::{ Path };
@@ -20,6 +25,10 @@ OpeningsDatabase {
 
 impl OpeningsDatabase {
     pub fn new() -> OpeningsDatabase {
+        //! Open new OpeningsDatabase
+        //! 
+        //! Automatically opens the database file. Or panics it if it doesn't exist.
+
         let path = Path::new("./chess_openings.txt");
         if !path.exists() { panic!("No openings database found!"); }
 
@@ -66,6 +75,10 @@ impl OpeningsDatabase {
     }
 
     pub fn find_opening(&self, moves: &Vec<Move>) -> Option<Move> {
+        //! Search for a opening with the specified move history.
+        //! 
+        //! Returns Some(Move) if it found anything, else None.
+
         let mut matching_openings = Vec::new();
         for opening in self.openings.iter() {
             if opening.moves.len() <= moves.len() { continue };

@@ -1,7 +1,7 @@
 #![warn(missing_docs)]
 
 //! Chess AI written in Rust.  
-//! This Ai was written for my Profielwerkstuk (dutch highschool thesis)
+//! This AI was written for my Profielwerkstuk (dutch highschool thesis)
 
 use std::io;
 use std::thread;
@@ -26,6 +26,10 @@ mod tests;
 
 
 fn spawn_stdin_channel() -> Receiver<String> {
+    //! Spawn a thread to handle the stdin input
+    //! 
+    //! Starts a thread that handles the stdin input coming from the [UCI](https://nl.wikipedia.org/wiki/Universal_Chess_Interface)-supporting program.
+
     let (tx, rx) = mpsc::channel::<String>();
     thread::spawn(move || loop {
         let mut buffer = String::new();
@@ -40,6 +44,8 @@ fn spawn_stdin_channel() -> Receiver<String> {
 
 
 fn main() {
+    //! Main function to spawn stdin channel and handle the [UCI](https://nl.wikipedia.org/wiki/Universal_Chess_Interface)-input
+
     let logger = Logger::new("log.log");
 
     let mut debug_mode = false;

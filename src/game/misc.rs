@@ -1,11 +1,19 @@
+//! Functions that are not really important but are for example used for debugging.
+//! 
+//! All functions are in an impl for Game.
+
 use crate::game::{ Game };
 use crate::consts::{ Color };
 use colored::*;
 
 
 impl Game {
+    //! Misc implementations
+
     #[allow(dead_code)]
     pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>, seen_from: Color) {
+        //! Will print the board with colors and chess unicode character in the console.
+
         let highlight = match highlight {
             Some(h) => h,
             None => Vec::new(),

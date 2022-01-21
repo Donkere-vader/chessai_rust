@@ -1,3 +1,5 @@
+//! Simple logger module to log games. Used for debugging.
+
 use std::fs::{ self, File };
 use std::path::{ Path };
 use std::io::Write;
@@ -18,6 +20,10 @@ pub struct Logger {
 
 impl Logger {
     pub fn new(file_name: &str) -> Logger {
+        //! Create new logger.
+        //! 
+        //! Output file will have the specified name.
+
         let new_path = Path::new(file_name);
         if !new_path.exists() {
             File::create(new_path).unwrap();
@@ -26,6 +32,8 @@ impl Logger {
     }
 
     pub fn log(&self, log_type: LogType, text: String) {
+        //! Logs the specified text with a log type of Info Warn or Err.
+
         let now = Utc::now().format("%Y-%m-%dT%T");
         let log_string = format!("{} [{}] {}\n", now, format!("{:?}", log_type).to_lowercase(), text);
 

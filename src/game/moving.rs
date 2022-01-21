@@ -1,3 +1,7 @@
+//! Functions to do moves of type Move.
+//! 
+//! All functions are in an impl for Game.
+
 use crate::piece::{ Piece };
 use crate::consts::{ Color, PieceType, MoveType };
 use crate::move_struct::{ Move };
@@ -5,13 +9,19 @@ use crate::game::{ Game };
 
 
 impl Game {
+    //! Move implementations
+
     pub fn apply_moves(&mut self, moves: &Vec<Move>) {
+        //! When supplied with a vector of Moves, this function will apply all moves in order.
+
         for mve in moves.iter() {
             self.do_move(mve);
         }
     }
 
     fn disable_castle(&mut self, color: &Color) {
+        //! Will disable the castling ability (King's and queen's side) for the specified color.
+
         let mut idxs_to_remove = Vec::new();
         for (idx, piece) in self.castle.iter().enumerate() {
             if piece.color == *color {
@@ -25,6 +35,8 @@ impl Game {
     }
 
     pub fn do_move(&mut self, mve: &Move) {
+        //! Will apply the specified Move to the game.
+
         let mut score_delta: i64 = 0;
         self.en_passant_target_square = None;
         let piece = self.board[mve.from[1] as usize ][mve.from[0] as usize].unwrap();

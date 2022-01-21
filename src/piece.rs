@@ -1,3 +1,7 @@
+//! Struct for a chess Piece
+//! 
+//! Has functionality for generating all moves an instance of a Piece can do.
+
 use crate::consts::{ PieceType, Color, GamePhase };
 use crate::piece_scores::{ SCORE_KING, SCORE_QUEEN, SCORE_ROOK, SCORE_BISHOP, SCORE_KNIGHT, SCORE_PAWN };
 use crate::game::{ Game };
@@ -14,10 +18,17 @@ pub struct Piece {
 
 impl Piece {
     pub fn get_all_moves(&self, x: i8, y: i8, game: &Game) -> Vec<Move> {
+        //! Return a list of all the moves this piece can do at it's current place.
+
         get_all_piece_moves(self.piece_type, self.color, x, y, game)
     }
 
     pub fn from_fen(fen_letter: char) -> Piece {
+        //! Load a piece from a FEN character.
+        //! 
+        //! Q = white queen  
+        //! k = black king
+
         let color;
         if fen_letter.to_lowercase().to_string() == fen_letter.to_string() {
             color = Color::Black;
@@ -42,6 +53,11 @@ impl Piece {
     }
 
     pub fn to_fen(&self) -> String {
+        //! Dumps the piece to a FEN character
+        //! 
+        //! Q = white queen  
+        //! k = black king
+
         let piece_letter = match self.piece_type {
             PieceType::King => String::from("k"),
             PieceType::Queen => String::from("q"),
@@ -58,6 +74,8 @@ impl Piece {
     }
 
     pub fn score(&self, x: usize, mut y: usize, game_phase: &GamePhase) -> i64 {
+        //! Determine the value of the piece's current position.
+
         if self.color == Color::Black {
             y = 7 - y;
         }
@@ -73,6 +91,8 @@ impl Piece {
     }
 
     pub fn unicode_piece(&self) -> String {
+        //! Return the unicode character for this piece.
+
         match self.piece_type {
             PieceType::King => String::from("♚"),
             PieceType::Queen => String::from("♛"),
@@ -85,12 +105,16 @@ impl Piece {
 
     #[allow(dead_code)]
     pub fn repr(&self) -> String {
+        //! Simple way to represent piece in the console.
+
         format!("<Piece {:?} {:?}>", self.piece_type, self.color)
     }
 }
 
 
 pub fn get_all_piece_moves(piece_type: PieceType, color: Color, x: i8, y: i8, game: &Game) -> Vec<Move> {
+    //! Get a list of all the moves a piece of this type and color can do from the specified position in the specified game.
+
     let mut moves: Vec<Move> = Vec::new();
     
     match piece_type {

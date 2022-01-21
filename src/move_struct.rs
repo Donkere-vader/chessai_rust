@@ -1,3 +1,7 @@
+//! Struct make handling moves easier.
+//!
+//! Easy loading, dumping and working with the move.
+
 use crate::consts::{ MoveType, PieceType, Color };
 use crate::piece::{ Piece };
 use std::fmt;
@@ -12,6 +16,7 @@ pub struct Move {
 
 impl Move {
     pub fn simple_new(from: [i8; 2], to: [i8; 2]) -> Move {
+        //! Create a basic new Move (a to b nothing special)
         Move {
             from: from,
             to: to,
@@ -20,6 +25,12 @@ impl Move {
     }
 
     pub fn from_long_algebraic_notation(notation: String) -> Move {
+        //! Load a move from the long algebraic notation
+        //! 
+        //! Examples of long algebraic notation:
+        //! a2a4 (white pawn from a2 to a4)
+        //! a7a8q (white pawn from a7 to a8 promoting to queen)
+
         let notation = notation.chars().collect::<Vec<char>>();
         let from_str = (notation[0], notation[1].to_digit(10).unwrap() as i8 - 1);
         let to_str = (notation[2], notation[3].to_digit(10).unwrap() as i8 - 1);
@@ -50,10 +61,16 @@ impl Move {
 
     #[allow(dead_code)]
     pub fn repr(&self) -> String {
+        //! Simple ray to represent move in console.
+        //! Used for debugging.
         format!("<Move {}>", self.long_algebraic_notation())
     }
 
     pub fn get_move_type(&self, castling: Option<&Vec<Piece>>, en_passant_target_square: Option<[i8; 2]>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
+        //! Determine what type of move this move is.
+        //! 
+        //! Is it a castle move? A promotion? etc.
+        
         if self.piece.is_some() {
             if self.from[1] == 6 || self.from[1] == 1 {
                 return (MoveType::Promote, self.piece);
@@ -80,6 +97,12 @@ impl Move {
     }
 
     pub fn long_algebraic_notation(&self) -> String {
+        //! Dump the move to a long algebraic notation.
+        //! 
+        //! Examples of long algebraic notation:
+        //! a2a4 (white pawn from a2 to a4)
+        //! a7a8q (white pawn from a7 to a8 promoting to queen)
+
         let from = format!("{}{}", (self.from[0] + 97) as u8 as char, self.from[1] + 1);
         let to = format!("{}{}", (self.to[0] + 97) as u8 as char, self.to[1] + 1);
 

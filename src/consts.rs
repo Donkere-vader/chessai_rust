@@ -1,3 +1,5 @@
+//! Collection of constants and enums that are used project-wide.
+
 pub const CHECK_MATE_SCORE: i64 = i64::MAX;
 
 #[derive(Debug, PartialEq, Copy, Clone)]

@@ -1,3 +1,7 @@
+//! Useful functions for storing and loading a Game into a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards_Notation)
+//! 
+//! All functions are in an impl for Game.
+
 use crate::piece::{ Piece };
 use crate::consts::{ Color, GamePhase };
 use crate::utils::{ string_square_to_square };
@@ -5,7 +9,15 @@ use crate::game::{ Game };
 
 
 impl Game {
+    //! Storage implementations
+
     pub fn from_fen(fen_code: String) -> Game {
+        //! Load a game from a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards_Notation).
+        //! 
+        //! ```
+        //! Game::from_fen(String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"));
+        //! ```
+
         let splitted_fen = fen_code.split_whitespace().take(6).collect::<Vec<&str>>();
         let mut board: [[Option<Piece>; 8]; 8] = Default::default();
         let mut castle_vec = Vec::new();
@@ -71,6 +83,15 @@ impl Game {
 
     #[allow(dead_code)]
     pub fn to_fen(&self) -> String {
+        //! Dump a game to a [FEN string](https://www.chessprogramming.org/Forsyth-Edwards_Notation)
+        //! 
+        //! ```
+        //! let start_fen_string = String::from("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        //! let game = Game::from_fen(start_fen_string.to_string());
+        //! 
+        //! assert_eq!(game.to_fen(), start_fen_string);
+        //! ```
+
         let mut board_string = String::new();
 
         let mut empty_spaces;

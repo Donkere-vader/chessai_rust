@@ -1,6 +1,7 @@
-
-// These matrixes are from the point of view of white
-// To get the value for black do 7 - y 
+//! Matrixes for the scores on different positions for each piece.
+//! 
+//! These matrixes are from the point of view of white
+//! To get the value for black do 7 - y 
 
 pub const SCORE_PAWN: [[[i64; 8]; 8]; 3] = [
     [

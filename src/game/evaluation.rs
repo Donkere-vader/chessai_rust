@@ -1,3 +1,7 @@
+//! Functions that are used to determine if the current game state is any good for the AI.
+//! 
+//! All functions are in an impl for Game.
+
 use crate::consts::{ GamePhase };
 use crate::game::{ Game };
 use crate::consts::{ Color, CHECK_MATE_SCORE };
@@ -6,7 +10,11 @@ use crate::consts::{ PieceType };
 
 
 impl Game {
+    //! Evaluation implementations
+
     pub fn calculate_game_phase(&mut self) {
+        //! Calculates the current game phase.
+
         let mut n_pieces_midfield = 0;
         let mut n_pieces = 0;
         for y in 0..8 {
@@ -33,6 +41,8 @@ impl Game {
     }
 
     pub fn get_board_score(&mut self, color: Color) -> i64 {
+        //! Returns the board score for the specified color
+
         match color {
             Color::White => self.score_white,
             Color::Black => self.score_white * -1,
@@ -40,6 +50,10 @@ impl Game {
     }
 
     pub fn calculate_board_score(&mut self) {
+        //! Calculates the score for the current board.
+        //! 
+        //! Only used when loading the board.
+        //! Afterwards the score is simply updated by only checking the new values for the moved pieces.
         let mut board_score: i64 = 0;
 
         let mut white_king_present = false;
@@ -84,6 +98,8 @@ impl Game {
     }
 
     pub fn get_all_moves(&self, color: Color) -> Vec<Move> {
+        //! Returns a vector of Moves that the specified color can make at this point in the game.
+
         let mut all_moves = Vec::new();
 
         for (y, rank) in (&self.board).iter().enumerate() {

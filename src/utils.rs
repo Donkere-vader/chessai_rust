@@ -1,9 +1,16 @@
+//! Some useful functions for use in other places of the code.
+
 use crate::move_struct::{ Move };
 use crate::consts::{ Color };
 use crate::piece::{ Piece };
 
 
 pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
+    //! Walk from the specified from position over the specified board. With the specified offsets to a maximum distance or to encountering 
+    //! a piece of the other color.
+    //! 
+    //! Returns a list of possible moves including take moves if take is true.
+
     let mut new_moves: Vec<Move> = Vec::new();
 
     let mut distance;
@@ -47,6 +54,10 @@ pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
 }
 
 pub fn with_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
+    //! Check positions to go to with a  certain offset. On the specified board from the specified position.
+    //! 
+    //! Doesn't add non-take moves to list of possible moves if ``has_to_take`` is true.
+
     let mut new_moves: Vec<Move> = Vec::new();
 
     for offset in offsets {
@@ -68,6 +79,11 @@ pub fn with_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
 }
 
 pub fn string_square_to_square(string_square: String) -> [i8; 2] {
+    //! Convert a coordinate to a string square
+    //! 
+    //! [0, 0] -> a1  
+    //! [4, 3] -> e4
+
     let mut square = [0i8; 2];
     let string_square_chars = string_square.chars().collect::<Vec<char>>();
     square[0] = vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|x| string_square_chars[0] == *x).unwrap() as i8;

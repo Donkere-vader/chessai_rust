@@ -1,3 +1,5 @@
+pub const CHECK_MATE_SCORE: i64 = i64::MAX;
+
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub enum PieceType {
     Pawn,
@@ -20,7 +22,7 @@ pub enum MoveType {
     Standard,
     Promote,
     Castle,
-    EnPassant
+    EnPassant,
 }
 
 #[derive(Debug, Clone, PartialEq, Copy)]

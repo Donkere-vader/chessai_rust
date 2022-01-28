@@ -75,7 +75,7 @@ impl Game {
             let result = t.join().unwrap();
             let mve = all_moves[idx];
 
-            println!("{} -> {} next expected move: {}", mve.repr(), result.0, result.1.repr());
+            // println!("{} -> {} next expected move: {}", mve.repr(), result.0, result.1.repr());
 
             let mut insert_at = best_moves.len();
             for (i, item) in best_moves.to_vec().into_iter().enumerate() {

@@ -1,5 +1,6 @@
 //! Collection of constants and enums that are used project-wide.
 
+pub const SEARCH_DEPTH: u8 = 5;
 pub const CHECK_MATE_SCORE: i64 = i64::MAX;
 
 #[derive(Debug, PartialEq, Copy, Clone)]

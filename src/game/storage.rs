@@ -36,8 +36,8 @@ impl Game {
                             x += 1;
                         },
                         Some(num) => {
-                            for x_delta in 0..num {
-                                board[y][x + x_delta as usize] = None;
+                            for x_delta in 0usize..(num as usize) {
+                                board[y][x + x_delta] = None;
                             }
                             x += num as usize;
                         },

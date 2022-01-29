@@ -30,7 +30,7 @@ pub fn walk_offsets(color: &Color, from: Cord, board: [[Option<Piece>; 8]; 8], o
             let current_cord = [current_cord_i8[0] as usize, current_cord_i8[1] as usize];
 
             // Check if tile is empty or takable
-            match &board[current_cord[1] as usize][current_cord[0] as usize] {
+            match &board[current_cord[1]][current_cord[0]] {
                 Some(p) => {
                     if p.color != *color && take {
                         new_moves.push( Move::simple_new(*&from, *&current_cord) );
@@ -74,7 +74,7 @@ pub fn with_offsets(color: &Color, from: Cord, board: [[Option<Piece>; 8]; 8], o
         let new_cord = [new_cord_i8[0] as usize, new_cord_i8[1] as usize];
 
         // Check if tile is empty or takable
-        match &board[new_cord[1] as usize][new_cord[0] as usize] {
+        match &board[new_cord[1]][new_cord[0]] {
             Some(p) => if p.color != *color { new_moves.push( Move::simple_new(*&from, *&new_cord) ); },
             None => if !has_to_take { new_moves.push( Move::simple_new(*&from, *&new_cord) ) },
         }

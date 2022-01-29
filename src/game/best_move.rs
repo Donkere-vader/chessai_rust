@@ -22,7 +22,7 @@ impl Game {
         let other_color = if color == Color::White { Color::Black } else { Color::White };
         for piece_type in vec![PieceType::Knight, PieceType::Rook, PieceType::Bishop, PieceType::Pawn, PieceType::Queen] {
             for mve in get_all_piece_moves(piece_type, other_color, square, &self).iter() {
-                let is_attacked = match self.board[mve.to[1] as usize][mve.to[0] as usize] {
+                let is_attacked = match self.board[mve.to[1]][mve.to[0]] {
                     Some(p) => { if p.piece_type == piece_type { true } else { false }},
                     None => false,
                 };
@@ -31,7 +31,7 @@ impl Game {
         }
 
         for mve in with_offsets(&Color::White, square, self.board, vec![[-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]], true).iter() {
-            let is_attacked = match self.board[mve.to[1] as usize][mve.to[0] as usize] {
+            let is_attacked = match self.board[mve.to[1]][mve.to[0]] {
                 Some(p) => { if p.piece_type == PieceType::King { true } else { false }},
                 None => false,
             };

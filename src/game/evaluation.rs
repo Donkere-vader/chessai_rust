@@ -66,7 +66,7 @@ impl Game {
             for piece in rank.iter() {
                 match piece {
                     Some(p) => {
-                        let piece_score = p.score(x, y, &self.game_phase);
+                        let piece_score = p.score([x, y], &self.game_phase);
                         if p.color == Color::White {
                             board_score += piece_score;
                         } else {

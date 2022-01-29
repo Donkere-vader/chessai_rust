@@ -74,8 +74,11 @@ impl Piece {
         }
     }
 
-    pub fn score(&self, x: usize, mut y: usize, game_phase: &GamePhase) -> i64 {
+    pub fn score(&self, pos: Cord, game_phase: &GamePhase) -> i64 {
         //! Determine the value of the piece's current position.
+
+        let x = pos[0];
+        let mut y = pos[1];
 
         if self.color == Color::Black {
             y = 7 - y;
@@ -134,7 +137,7 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, pos: Cord, game:
                         moves.push(Move { from: pos, to: [7, y], piece: Some(king)});
                 }
                 if game.castle.contains(&queen) &&
-                    game.board[y][1].is_none() && game.board[y][2].is_none() && !game.square_is_attacked([2, pos[1]], other_color) && game.board[y][3].is_none() && !game.square_is_attacked([3, pos[1] as usize], other_color) {
+                    game.board[y][1].is_none() && game.board[y][2].is_none() && !game.square_is_attacked([2, pos[1]], other_color) && game.board[y][3].is_none() && !game.square_is_attacked([3, pos[1]], other_color) {
                         moves.push(Move { from: pos, to: [0, y], piece: Some(queen)});
                 }
             }

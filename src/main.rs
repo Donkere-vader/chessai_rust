@@ -21,6 +21,7 @@ mod move_struct;
 mod logger;
 mod utils;
 mod openings;
+mod types;
 #[cfg(test)]
 mod tests;
 

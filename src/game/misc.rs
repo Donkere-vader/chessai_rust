@@ -5,13 +5,14 @@
 use crate::game::{ Game };
 use crate::consts::{ Color };
 use colored::*;
+use crate::types::{ Cord };
 
 
 impl Game {
     //! Misc implementations
 
     #[allow(dead_code)]
-    pub fn show_board(&self, highlight: Option<Vec<[i8; 2]>>, seen_from: Color) {
+    pub fn show_board(&self, highlight: Option<Vec<Cord>>, seen_from: Color) {
         //! Will print the board with colors and chess unicode character in the console.
 
         let highlight = match highlight {

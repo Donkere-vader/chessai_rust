@@ -9,7 +9,7 @@ pub mod best_move;
 use crate::piece::{ Piece };
 use crate::consts::{ Color, GamePhase };
 use crate::move_struct::{ Move };
-
+use crate::types::{ Cord };
 
 
 #[derive(Clone)]
@@ -17,7 +17,7 @@ pub struct Game {
     pub board: [[Option<Piece>; 8]; 8],
     pub on_turn: Color,
     pub castle: Vec<Piece>,
-    pub en_passant_target_square: Option<[i8; 2]>,
+    pub en_passant_target_square: Option<Cord>,
     pub moves: Vec<Move>,
     pub score_white: i64,
     pub fullmove_counter: usize,

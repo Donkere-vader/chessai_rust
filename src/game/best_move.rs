@@ -10,12 +10,13 @@ use std::thread;
 use crate::openings::{ OpeningsDatabase };
 use rand::Rng;
 use crate::game::{ Game };
+use crate::types::{ Cord };
 
 
 impl Game {
     //! Best move implementations
 
-    pub fn square_is_attacked(&self, square: [i8; 2], color: Color) -> bool {
+    pub fn square_is_attacked(&self, square: Cord, color: Color) -> bool {
         //! Returns true if the square at the given coordinate is under attack from the specified color.
 
         let other_color = if color == Color::White { Color::Black } else { Color::White };

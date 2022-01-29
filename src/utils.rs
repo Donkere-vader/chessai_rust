@@ -3,9 +3,10 @@
 use crate::move_struct::{ Move };
 use crate::consts::{ Color };
 use crate::piece::{ Piece };
+use crate::types::{ Cord };
 
 
-pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
+pub fn walk_offsets(color: &Color, from: Cord, board: [[Option<Piece>; 8]; 8], offsets: Vec<Cord>, max_distance: Option<u32>, take: bool) -> Vec<Move> {
     //! Walk from the specified from position over the specified board. With the specified offsets to a maximum distance or to encountering 
     //! a piece of the other color.
     //! 
@@ -53,7 +54,7 @@ pub fn walk_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
     new_moves
 }
 
-pub fn with_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8], offsets: Vec<[i8; 2]>, has_to_take: bool) -> Vec<Move> {
+pub fn with_offsets(color: &Color, from: Cord, board: [[Option<Piece>; 8]; 8], offsets: Vec<Cord>, has_to_take: bool) -> Vec<Move> {
     //! Check positions to go to with a  certain offset. On the specified board from the specified position.
     //! 
     //! Doesn't add non-take moves to list of possible moves if ``has_to_take`` is true.
@@ -78,7 +79,7 @@ pub fn with_offsets(color: &Color, from: [i8; 2], board: [[Option<Piece>; 8]; 8]
     new_moves
 }
 
-pub fn string_square_to_square(string_square: String) -> [i8; 2] {
+pub fn string_square_to_square(string_square: String) -> Cord {
     //! Convert a coordinate to a string square
     //! 
     //! [0, 0] -> a1  

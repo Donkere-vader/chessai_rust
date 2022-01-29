@@ -3,19 +3,20 @@
 //! Easy loading, dumping and working with the move.
 
 use crate::consts::{ MoveType, PieceType, Color };
+use crate::types::{ Cord };
 use crate::piece::{ Piece };
 use std::fmt;
 
 
 #[derive(Copy, Clone)]
 pub struct Move {
-    pub from: [i8; 2],
-    pub to: [i8; 2],
+    pub from: Cord,
+    pub to: Cord,
     pub piece: Option<Piece>,
 }
 
 impl Move {
-    pub fn simple_new(from: [i8; 2], to: [i8; 2]) -> Move {
+    pub fn simple_new(from: Cord, to: Cord) -> Move {
         //! Create a basic new Move (a to b nothing special)
         Move {
             from: from,
@@ -35,12 +36,12 @@ impl Move {
         let from_str = (notation[0], notation[1].to_digit(10).unwrap() as i8 - 1);
         let to_str = (notation[2], notation[3].to_digit(10).unwrap() as i8 - 1);
 
-        let from: [i8; 2] = [
+        let from: Cord = [
             vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == from_str.0).unwrap() as i8,
             from_str.1,
         ];
 
-        let to: [i8; 2]  = [
+        let to: Cord  = [
             vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == to_str.0).unwrap() as i8,
             to_str.1,
         ];
@@ -66,7 +67,7 @@ impl Move {
         format!("<Move {}>", self.long_algebraic_notation())
     }
 
-    pub fn get_move_type(&self, castling: Option<&Vec<Piece>>, en_passant_target_square: Option<[i8; 2]>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
+    pub fn get_move_type(&self, castling: Option<&Vec<Piece>>, en_passant_target_square: Option<Cord>, piece_type: Option<PieceType>) -> (MoveType, Option<Piece>) {
         //! Determine what type of move this move is.
         //! 
         //! Is it a castle move? A promotion? etc.

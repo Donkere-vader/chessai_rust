@@ -36,7 +36,7 @@ impl Game {
 
                 // println!("{} {} {:?}", x, y, highlight.contains(&[x as i8, y as i8]));
 
-                if highlight.contains(&[x as i8, y as i8]) {
+                if highlight.contains(&[x, y]) {
                     print!(
                         "{}",
                         match tile_color {

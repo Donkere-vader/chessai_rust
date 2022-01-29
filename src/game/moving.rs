@@ -78,9 +78,9 @@ impl Game {
                 self.board[mve.to[1] as usize ][mve.to[0] as usize] = Some(piece);
 
                 if piece.piece_type == PieceType::Pawn {
-                    let delta = mve.from[1] - mve.to[1];
+                    let delta = mve.from[1] as i8 - mve.to[1] as i8;
                     if delta.abs() == 2 {
-                        self.en_passant_target_square = Some([mve.from[1] + (delta / 2), mve.to[0]]);
+                        self.en_passant_target_square = Some([mve.from[1] + (delta as usize / 2), mve.to[0]]);
                     }
                 }
             },

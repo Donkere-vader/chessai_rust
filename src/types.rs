@@ -1,2 +1,2 @@
 
-pub type Cord = [i8; 2];
+pub type Cord = [usize; 2];

@@ -108,9 +108,9 @@ impl Game {
                     Some(p) => if color == p.color {
                         // sort so that pawns will get checked last
                         match p.piece_type {
-                            PieceType::Pawn => { all_moves.extend(p.get_all_moves(x as i8, y as i8, &self)) },
+                            PieceType::Pawn => { all_moves.extend(p.get_all_moves([x, y], &self)) },
                             _ => {
-                                for mve in p.get_all_moves(x as i8, y as i8, &self) {
+                                for mve in p.get_all_moves([x, y], &self) {
                                     all_moves.insert(0, mve);
                                 }
                             }

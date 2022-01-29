@@ -33,17 +33,17 @@ impl Move {
         //! a7a8q (white pawn from a7 to a8 promoting to queen)
 
         let notation = notation.chars().collect::<Vec<char>>();
-        let from_str = (notation[0], notation[1].to_digit(10).unwrap() as i8 - 1);
-        let to_str = (notation[2], notation[3].to_digit(10).unwrap() as i8 - 1);
+        let from_str = (notation[0], notation[1].to_digit(10).unwrap() - 1);
+        let to_str = (notation[2], notation[3].to_digit(10).unwrap() - 1);
 
         let from: Cord = [
-            vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == from_str.0).unwrap() as i8,
-            from_str.1,
+            vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == from_str.0).unwrap(),
+            from_str.1  as usize,
         ];
 
         let to: Cord  = [
-            vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == to_str.0).unwrap() as i8,
-            to_str.1,
+            vec!['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].iter().position(|&x| x == to_str.0).unwrap(),
+            to_str.1 as usize,
         ];
 
 

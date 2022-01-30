@@ -8,3 +8,4 @@ authors = ["donkere-vader"]
 colored = "2.0.0"
 chrono = "0.4"
 rand = "0.8.0"
+argparse = "0.2.2"

@@ -50,7 +50,7 @@ impl Game {
         // check for move from opening database
         if self.moves.len() == self.fullmove_counter {
             match opening_database.find_opening(&self.moves) {
-                Some(mve) => return mve,
+                Some(mve) => {return mve},
                 None => {},
             }
         }

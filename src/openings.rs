@@ -10,8 +10,8 @@ use rand::Rng;
 
 #[derive(Clone)]
 struct Opening {
-    eco: String,
-    name: String,
+    // eco: String,
+    // name: String,
     moves: Vec<Move>,
 }
 
@@ -59,8 +59,8 @@ impl OpeningsDatabase {
 
             if eco.is_some() && name.is_some() && moves.is_some() {
                 openings.push(Opening {
-                    eco: eco.unwrap().to_string(),
-                    name: name.unwrap().to_string(),
+                    // eco: eco.unwrap().to_string(),
+                    // name: name.unwrap().to_string(),
                     moves: moves.unwrap(),
                 });
                 eco = None;
@@ -97,7 +97,6 @@ impl OpeningsDatabase {
 
         if matching_openings.len() > 0 {
             let open_idx = rand::thread_rng().gen_range(0..matching_openings.len());
-            println!("Opening eco: {} name: {}", matching_openings[open_idx].eco, matching_openings[open_idx].name);
             return Some(matching_openings[open_idx].moves[moves.len()]);
         }
 

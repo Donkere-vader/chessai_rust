@@ -40,7 +40,7 @@ fn main() {
 
     }
 
-    if mode.to_uppercase() == "UCI".to_string() {
+    if mode.to_uppercase() == *"UCI".to_string() {
         uci();
     } else if vec!["bench".to_string(), "benchmark".to_string()].contains(&mode.to_lowercase()) {
         run_benchmarks(save_file);

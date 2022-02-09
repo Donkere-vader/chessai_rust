@@ -26,8 +26,7 @@ impl Game {
         let fullmove_counter;
 
         if let [board_string, on_turn_fen_let, castling, en_passant_target_square_string, _halfmove_clock, fullmove_counter_string] = &splitted_fen[..] {
-            let mut y = 0;
-            for rank in board_string.rsplit("/") {
+            for (y, rank) in board_string.rsplit('/').enumerate() {
                 let mut x = 0;
                 for chr in rank.chars() {
                     match chr.to_digit(10) {
@@ -43,10 +42,9 @@ impl Game {
                         },
                     }
                 }
-                y += 1;
             }
             
-            on_turn = if **on_turn_fen_let == String::from("w") { Color::White } else { Color::Black };
+            on_turn = if *on_turn_fen_let == "w" { Color::White } else { Color::Black };
 
             for piece_char in castling.chars() {
                 if piece_char == '-' { break; }
@@ -65,14 +63,14 @@ impl Game {
         }
 
         let mut new_game = Game {
-            board: board,
-            on_turn: on_turn,
+            board,
+            on_turn,
             castle: castle_vec,
-            en_passant_target_square: en_passant_target_square,
+            en_passant_target_square,
             score_white: 0,
             moves: Vec::new(),
-            fullmove_counter: fullmove_counter,
-            game_phase: GamePhase::StartGame,
+            fullmove_counter,
+            game_phase: GamePhase::Start,
         };
 
         new_game.calculate_board_score();
@@ -95,8 +93,7 @@ impl Game {
         let mut board_string = String::new();
 
         let mut empty_spaces;
-        let mut rank_idx = 0;
-        for rank in self.board.iter().rev() {
+        for (idx, rank) in self.board.iter().rev().enumerate() {
             empty_spaces = 0;
             for piece in rank {
                 match piece {
@@ -113,10 +110,9 @@ impl Game {
             if empty_spaces > 0 {
                 board_string += &empty_spaces.to_string();
             }
-            if rank_idx != 7 {
+            if idx != 7 {
                 board_string += "/";
             }
-            rank_idx += 1;
         }
 
         let on_turn = match self.on_turn {
@@ -125,7 +121,7 @@ impl Game {
         };
 
         let mut castling_string = String::new();
-        if self.castle.len() > 0 {
+        if !self.castle.is_empty() {
             for piece in self.castle.iter() {
                 castling_string += &piece.to_fen();
             }

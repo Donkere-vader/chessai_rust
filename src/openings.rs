@@ -37,15 +37,15 @@ impl OpeningsDatabase {
         let mut eco = None;
         let mut name = None;
         let mut moves = None;
-        for line in contents.split("\n") {
-            let splitted_line = line.split(" ").collect::<Vec<&str>>();
+        for line in contents.split('\n') {
+            let splitted_line = line.split(' ').collect::<Vec<&str>>();
             let line_type = splitted_line[0];
             if line_type == "ECO" {
                 eco = Some(splitted_line[1]);
             } else if line_type == "NAME" {
                 let mut name_string = String::new();
-                for i in 1..splitted_line.len() {
-                    name_string += splitted_line[i];
+                for item in splitted_line.iter().skip(1) {
+                    name_string += item;
                 }
                 name = Some(name_string)
             } else if line_type == "UCI" {
@@ -70,11 +70,11 @@ impl OpeningsDatabase {
         }
 
         OpeningsDatabase {
-            openings: openings
+            openings
         }
     }
 
-    pub fn find_opening(&self, moves: &Vec<Move>) -> Option<Move> {
+    pub fn find_opening(&self, moves: &[Move]) -> Option<Move> {
         //! Search for a opening with the specified move history.
         //! 
         //! Returns Some(Move) if it found anything, else None.
@@ -95,7 +95,7 @@ impl OpeningsDatabase {
             }
         }
 
-        if matching_openings.len() > 0 {
+        if !matching_openings.is_empty() {
             let open_idx = rand::thread_rng().gen_range(0..matching_openings.len());
             return Some(matching_openings[open_idx].moves[moves.len()]);
         }

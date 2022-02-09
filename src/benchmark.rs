@@ -10,10 +10,8 @@ use std::path::{ Path };
 
 
 pub fn run_benchmarks(save_file: Option<String>) {
-    if save_file.is_some() {
-        if Path::new(save_file.as_ref().unwrap()).exists() {
-            panic!("Output file already exists")
-        }
+    if save_file.is_some() && Path::new(save_file.as_ref().unwrap()).exists() {
+        panic!("Output file already exists")
     }
 
     println!("[ === Starting benchmarks === ]\n");
@@ -60,10 +58,10 @@ pub fn run_benchmarks(save_file: Option<String>) {
         println!("{: <30} {}ns", res.0, res.1);
     }
 
-    if save_file.is_some() {
-        let mut file = File::create(&save_file.unwrap()).unwrap();
+    if let Some(save_file) = save_file {
+        let mut file = File::create(&save_file).unwrap();
         for res in results.iter() {
-            file.write_all(&format!("{},{}\n", res.0, res.1).as_bytes()).unwrap();
+            file.write_all(format!("{},{}\n", res.0, res.1).as_bytes()).unwrap();
         }
     }
 }

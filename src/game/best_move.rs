@@ -20,10 +20,10 @@ impl Game {
         //! Returns true if the square at the given coordinate is under attack from the specified color.
 
         let other_color = if color == Color::White { Color::Black } else { Color::White };
-        for piece_type in vec![PieceType::Knight, PieceType::Rook, PieceType::Bishop, PieceType::Pawn, PieceType::Queen] {
-            for mve in get_all_piece_moves(piece_type, other_color, square, &self).iter() {
+        for piece_type in [PieceType::Knight, PieceType::Rook, PieceType::Bishop, PieceType::Pawn, PieceType::Queen] {
+            for mve in get_all_piece_moves(piece_type, other_color, square, self).iter() {
                 let is_attacked = match self.board[mve.to[1]][mve.to[0]] {
-                    Some(p) => { if p.piece_type == piece_type { true } else { false }},
+                    Some(p) => { p.piece_type == piece_type},
                     None => false,
                 };
                 if is_attacked { return true };
@@ -32,7 +32,7 @@ impl Game {
 
         for mve in with_offsets(&Color::White, square, self.board, vec![[-1, 0], [1, 0], [-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]], true).iter() {
             let is_attacked = match self.board[mve.to[1]][mve.to[0]] {
-                Some(p) => { if p.piece_type == PieceType::King { true } else { false }},
+                Some(p) => { p.piece_type == PieceType::King },
                 None => false,
             };
             if is_attacked { return true };
@@ -49,9 +49,8 @@ impl Game {
 
         // check for move from opening database
         if self.moves.len() == self.fullmove_counter {
-            match opening_database.find_opening(&self.moves) {
-                Some(mve) => {return mve},
-                None => {},
+            if let Some(mve) = opening_database.find_opening(&self.moves) {
+                return mve;
             }
         }
 
@@ -60,19 +59,18 @@ impl Game {
         let mut threads: Vec<thread::JoinHandle<(i64, Move)>> = Vec::new();
         for mve in all_moves.iter() {
             let mut new_game = self.clone();
-            new_game.do_move(&mve);
+            new_game.do_move(mve);
             threads.push(
                 thread::spawn(move || {
                     let r = new_game.private_get_best_move(depth - 1, depth, CHECK_MATE_SCORE);
-                    (r.0 * -1, r.1)
+                    (-r.0, r.1)
                 })
             );
         }
 
         // receive moves from threads
         let mut best_moves: Vec<(Move, i64)> = Vec::new();
-        let mut idx = 0;
-        for t in threads {
+        for (idx, t) in threads.into_iter().enumerate() {
             let result = t.join().unwrap();
             let mve = all_moves[idx];
 
@@ -86,8 +84,6 @@ impl Game {
                 }
             }
             best_moves.insert(insert_at, (mve, result.0));
-
-            idx += 1;
         }
 
         // calculate best move(s) with same highest score
@@ -117,17 +113,17 @@ impl Game {
         for mve in all_moves.iter() {
             // generate new game from move
             let mut new_game = self.clone();
-            new_game.do_move(&mve);
+            new_game.do_move(mve);
 
             // calculate the score of the game
             let mut game_score: i64;
-            game_score = new_game.get_board_score(new_game.on_turn) * -1;
+            game_score = -new_game.get_board_score(new_game.on_turn);
             if game_score == -CHECK_MATE_SCORE || game_score == CHECK_MATE_SCORE {
                 return (game_score, *mve);
             }
             if depth > 1 {
-                let r = new_game.private_get_best_move(depth - 1, maximum_depth, (*&highest_score) * -1);
-                game_score = r.0 * -1;
+                let r = new_game.private_get_best_move(depth - 1, maximum_depth, -highest_score);
+                game_score = -r.0;
             }
 
             // check if this is the best performing one

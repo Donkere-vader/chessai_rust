@@ -19,8 +19,8 @@ impl Move {
     pub fn simple_new(from: Cord, to: Cord) -> Move {
         //! Create a basic new Move (a to b nothing special)
         Move {
-            from: from,
-            to: to,
+            from,
+            to,
             piece: None,
         }
     }
@@ -54,9 +54,9 @@ impl Move {
 
 
         Move {
-            from: from,
-            to: to,
-            piece: piece,
+            from,
+            to,
+            piece,
         }
     }
 
@@ -72,21 +72,20 @@ impl Move {
         //! 
         //! Is it a castle move? A promotion? etc.
         
-        if self.piece.is_some() {
-            if self.from[1] == 6 || self.from[1] == 1 {
-                return (MoveType::Promote, self.piece);
-            }
+        if self.piece.is_some() && (self.from[1] == 6 || self.from[1] == 1) {
+            return (MoveType::Promote, self.piece);
         };
 
-        if castling.is_some() && self.from[0] == 4 && (self.from[1] == 0 || self.from[1] == 7) {
-            let castling = castling.unwrap();
-            let color = if self.from[1] == 0 { Color::White } else { Color::Black };
-            let king = Piece { piece_type: PieceType::King, color: color};
-            let queen = Piece { piece_type: PieceType::Queen, color: color};
-            if (self.to[0] == 6 || self.to[0] == 7) && castling.contains(&king) {
-                return (MoveType::Castle, Some(king));
-            } else if (self.to[0] == 2 || self.to[0] == 0) && castling.contains(&Piece { piece_type: PieceType::Queen, color: color}) {
-                return (MoveType::Castle, Some(queen));
+        if let Some(castling) = castling {
+            if self.from[0] == 4 && (self.from[1] == 0 || self.from[1] == 7) {
+                let color = if self.from[1] == 0 { Color::White } else { Color::Black };
+                let king = Piece { piece_type: PieceType::King, color};
+                let queen = Piece { piece_type: PieceType::Queen, color};
+                if (self.to[0] == 6 || self.to[0] == 7) && castling.contains(&king) {
+                    return (MoveType::Castle, Some(king));
+                } else if (self.to[0] == 2 || self.to[0] == 0) && castling.contains(&Piece { piece_type: PieceType::Queen, color }) {
+                    return (MoveType::Castle, Some(queen));
+                }
             }
         }
 

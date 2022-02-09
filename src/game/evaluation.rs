@@ -19,24 +19,21 @@ impl Game {
         let mut n_pieces = 0;
         for y in 0..8 {
             for x in 0..8 {
-                match self.board[y][x] {
-                    Some(_) => {
-                        n_pieces += 1;
-                        if y >= 2 && y <= 5 {
-                            n_pieces_midfield += 1;
-                        }
-                    },
-                    None => {},
+                if self.board[y][x].is_some() {
+                    n_pieces += 1;
+                    if (2..=5).contains(&y) {
+                        n_pieces_midfield += 1;
+                    }
                 }
             }
         }
 
         if n_pieces_midfield > 8 || self.fullmove_counter > 15 {
-            self.game_phase = GamePhase::MidGame;
+            self.game_phase = GamePhase::Mid;
         }
 
         if n_pieces < 12 {
-            self.game_phase = GamePhase::EndGame;
+            self.game_phase = GamePhase::End;
         }
     }
 
@@ -45,7 +42,7 @@ impl Game {
 
         match color {
             Color::White => self.score_white,
-            Color::Black => self.score_white * -1,
+            Color::Black => -self.score_white,
         }
     }
 
@@ -59,11 +56,8 @@ impl Game {
         let mut white_king_present = false;
         let mut black_king_present = false;
 
-        let mut y = 0;
-        let mut x;
-        for rank in self.board.iter() {
-            x = 0;
-            for piece in rank.iter() {
+        for (y, rank) in self.board.iter().enumerate() {
+            for (x, piece) in rank.iter().enumerate() {
                 match piece {
                     Some(p) => {
                         let piece_score = p.score([x, y], &self.game_phase);
@@ -82,9 +76,7 @@ impl Game {
                     },
                     None => {},
                 }
-                x += 1;
             }
-            y += 1;
         }
 
         if !white_king_present || !black_king_present {
@@ -108,9 +100,9 @@ impl Game {
                     Some(p) => if color == p.color {
                         // sort so that pawns will get checked last
                         match p.piece_type {
-                            PieceType::Pawn => { all_moves.extend(p.get_all_moves([x, y], &self)) },
+                            PieceType::Pawn => { all_moves.extend(p.get_all_moves([x, y], self)) },
                             _ => {
-                                for mve in p.get_all_moves([x, y], &self) {
+                                for mve in p.get_all_moves([x, y], self) {
                                     all_moves.insert(0, mve);
                                 }
                             }

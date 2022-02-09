@@ -20,7 +20,7 @@ fn spawn_stdin_channel() -> Receiver<String> {
         let mut buffer = String::new();
         io::stdin().read_line(&mut buffer).unwrap();
         buffer = buffer.trim().to_string();
-        if buffer.len() != 0 {
+        if !buffer.is_empty() {
             tx.send(buffer).unwrap();
         }
     });
@@ -47,7 +47,7 @@ pub fn uci() {
         match stdin_channel.try_recv() {
             Ok(message) => {
                 logger.log(LogType::Info, format!("Received: {}", message));
-                let splitted_buffer = message.split(" ").collect::<Vec<&str>>();
+                let splitted_buffer = message.split(' ').collect::<Vec<&str>>();
                 let command = splitted_buffer[0];
 
                 if command == "uci" {

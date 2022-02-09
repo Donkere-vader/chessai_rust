@@ -48,12 +48,12 @@ impl Piece {
         };
 
         Piece {
-            piece_type: piece_type,
-            color: color,
+            piece_type,
+            color,
         }
     }
 
-    pub fn to_fen(&self) -> String {
+    pub fn to_fen(self) -> String {
         //! Dumps the piece to a FEN character
         //! 
         //! Q = white queen  
@@ -129,9 +129,9 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, pos: Cord, game:
             // castle moves
             if !game.square_is_attacked(pos, if color == Color::White { Color::Black } else { Color::White }) {
                 let y = if color == Color::White { 0 } else { 7 };
-                let other_color = if color == Color::White { Color::Black } else { Color::Black };
-                let king = Piece { piece_type: PieceType::King, color: color};
-                let queen = Piece { piece_type: PieceType::Queen, color: color};
+                let other_color = if color == Color::White { Color::Black } else { Color::White };
+                let king = Piece { piece_type: PieceType::King, color};
+                let queen = Piece { piece_type: PieceType::Queen, color};
                 if game.castle.contains(&king) &&
                     game.board[y][5].is_none() && !game.square_is_attacked([5, y], other_color) && game.board[y][6].is_none() && !game.square_is_attacked([6, pos[1]], other_color) {
                         moves.push(Move { from: pos, to: [7, y], piece: Some(king)});
@@ -153,8 +153,8 @@ pub fn get_all_piece_moves(piece_type: PieceType, color: Color, pos: Cord, game:
             if (color == Color::White && pos[1] == 6 && game.board[7][pos[0]].is_none() ) || (color == Color::Black && pos[1] == 1 && game.board[0][pos[0]].is_none()) {
                 // promote
                 let to_y = if color == Color::White { 7 } else { 0 };
-                for piece_type in vec![PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
-                    moves.push(Move { from: pos, to: [pos[0], to_y], piece: Some(Piece { piece_type: piece_type, color: color }) } );
+                for piece_type in [PieceType::Queen, PieceType::Knight, PieceType::Rook, PieceType::Bishop] {
+                    moves.push(Move { from: pos, to: [pos[0], to_y], piece: Some(Piece { piece_type, color }) } );
                 }
             } else {
                 // standard moves

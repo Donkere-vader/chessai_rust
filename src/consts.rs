@@ -30,7 +30,7 @@ pub enum MoveType {
 
 #[derive(Debug, Clone, PartialEq, Copy)]
 pub enum GamePhase {
-    StartGame = 0,
-    MidGame = 1,
-    EndGame = 2,
+    Start = 0,
+    Mid = 1,
+    End = 2,
 }

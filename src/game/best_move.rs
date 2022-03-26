@@ -100,7 +100,7 @@ impl Game {
         best_moves[move_idx].0
     }
 
-    pub fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> (i64, Move) {
+    fn private_get_best_move(&self, depth: u8, maximum_depth: u8, score_to_beat: i64) -> (i64, Move) {
         //! Function to calculate best move.
         //! 
         //! Each spawned thread by the function ``get_best_move`` runs this function for it's sub-game.
